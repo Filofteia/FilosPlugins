@@ -47,6 +47,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import net.runelite.client.plugins.raids.solver.Room;
+import net.runelite.client.util.Text;
 
 @Slf4j
 @PluginDescriptor(
@@ -151,18 +152,24 @@ public class ScoutHelperPlugin extends Plugin
 	}
 
 	/**
-	 * @return String[]: Rotations from Config
+	 * @return List<String>: Rotations from Config
 	 */
-	private String[] getConfigRotations()
+	private List<String> getConfigRotations()
 	{
+		List<String> rotations = new ArrayList<>();
 		String rotationConfig = config.rotationList();
 
 		if (rotationConfig.isBlank())
 		{
-			return null;
+			return rotations;
 		}
 
-		return rotationConfig.split("\n");
+		for (String line : rotationConfig.split("\\n"))
+		{
+			rotations.add(line.replaceAll("(\\s*,\\s*)", ","));    // Spaces before or after comma allowed
+		}
+
+		return rotations;
 	}
 
 	@Subscribe
@@ -178,7 +185,7 @@ public class ScoutHelperPlugin extends Plugin
 		raidSearched = true;
 
 		Set<Overload> overloadSet = config.overloadRooms();
-		String[] blockedRooms = config.blockedRooms().split(",");
+		List<String> blockedRooms = Text.fromCSV(config.blockedRooms());
 
 		boolean overloadFound = overloadSet.isEmpty();    // Skips the check if empty
 		boolean rotationFound = !config.rotationEnabled();    // Skips the check if not enabled
@@ -243,24 +250,26 @@ public class ScoutHelperPlugin extends Plugin
 			}
 		}
 
+		List<String> rotations = getConfigRotations();
+		String raidRotation = getRaidRotation(raid);
+
 		// Rotation Flag
 		if (!rotationFound)
 		{
-			String[] configRotations = getConfigRotations();
-			String raidRotation = getRaidRotation(raid);
-
-			if (configRotations != null)
+			if (!rotations.isEmpty())
 			{
-				for (String rotation : configRotations)
+				for (String rotation : rotations)
 				{
 					if (raidRotation.equalsIgnoreCase(rotation))
 					{
 						rotationFound = true;
+						layoutFound = true;    // if rotation is listed just bypass layout
+						overloadFound = true; // also bypass this
 						break;
 					}
 				}
 			}
-			else    // Prevent an empty rotation from detecting any raid
+			else    // Prevent an empty rotation from preventing raids
 			{
 				rotationFound = true;
 			}
@@ -269,6 +278,11 @@ public class ScoutHelperPlugin extends Plugin
 		// Layout Flag
 		for (Layout layout : config.layoutType())
 		{
+			if (layoutFound)    // Skip if previous or rotation
+			{
+				break;
+			}
+
 			if (layout.getMaxCombat() == combatRooms.size() && layout.getMaxPuzzles() == puzzleRooms.size())
 			{
 				layoutFound = true;
@@ -280,6 +294,11 @@ public class ScoutHelperPlugin extends Plugin
 		String layoutKeys = config.layoutKeys().replace(" ", "");
 		for (String layout : layoutKeys.split(","))
 		{
+			if (layoutFound)    // Skip if previous or rotation
+			{
+				break;
+			}
+
 			if (raid.getLayout().toCodeString().equalsIgnoreCase(layout))
 			{
 				layoutFound = true;
@@ -300,11 +319,6 @@ public class ScoutHelperPlugin extends Plugin
 	{
 		raidFound = false;
 		raidSearched = false;
-	}
-
-	private boolean isInRaid()	// Unused Currently
-	{
-		return client.getVarbitValue(Varbits.IN_RAID) == 1;
 	}
 
 	private boolean isRaidStarted()

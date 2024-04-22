@@ -82,7 +82,7 @@ public interface ScoutHelperConfig extends Config
 	@ConfigItem(
 		keyName = "rotationEnabled",
 		name = "Rotation Toggle",
-		description = "Toggles 'Rotations'",
+		description = "Toggle rotations and only searches for the specified rotations.",
 		section = raidSection,
 		position = 0
 	)
@@ -94,7 +94,7 @@ public interface ScoutHelperConfig extends Config
 	@ConfigItem(
 		keyName = "rotationList",
 		name = "Rotations",
-		description = "Allows you to require a set rotation: <br><br>Vasa,Shamans,Vespula<br>Vasa,Tekton,Vespula<br><br>for example",
+		description = "Set a required rotation (only finds these rotations!): <br><br>vasa,shamans,vespula<br>vasa,tekton,vespula<br><br>each must be on their own line!",
 		section = raidSection,
 		position = 1
 	)

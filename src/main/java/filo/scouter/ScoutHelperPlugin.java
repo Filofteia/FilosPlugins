@@ -84,7 +84,7 @@ public class ScoutHelperPlugin extends Plugin
 	{
 		int CoX_ENTRY_ID = 49999;
 
-		if (e.getIdentifier() != CoX_ENTRY_ID || isRaidStarted())
+		if (e.getIdentifier() != CoX_ENTRY_ID || isRaidStarted() || isChallengeMode())
 		{
 			return;
 		}
@@ -175,6 +175,13 @@ public class ScoutHelperPlugin extends Plugin
 	@Subscribe
 	public void onRaidScouted(RaidScouted raidScouted)
 	{
+		if (isChallengeMode()) // Search irrelevant if Challenge Mode
+		{
+			raidFound = false;
+			raidSearched = true;	// Prevent double check
+			return;
+		}
+
 		Raid raid = raidScouted.getRaid();
 
 		if (raid == null || raidSearched || isRaidStarted())
@@ -319,6 +326,12 @@ public class ScoutHelperPlugin extends Plugin
 	{
 		raidFound = false;
 		raidSearched = false;
+	}
+
+	private boolean isChallengeMode()
+	{
+		final int VARBIT_CM_FLAG = 6385;
+		return client.getVarbitValue(VARBIT_CM_FLAG) == 1;
 	}
 
 	private boolean isRaidStarted()

@@ -74,7 +74,7 @@ A list of possible rooms below (exact text and case-insensitive):
 8) Mystics
 9) Crabs
 10) Ice Demon
-11) Tigthtrope
+11) Tightrope
 12) Thieving
 
 ## Overload Settings

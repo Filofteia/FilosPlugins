@@ -30,6 +30,7 @@ import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.Varbits;
+import net.runelite.api.events.VarbitChanged;
 import net.runelite.client.Notifier;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.PluginDescriptor;
@@ -67,6 +68,10 @@ public class ScoutHelperPlugin extends Plugin
 	private boolean raidFound = false;
 	private boolean raidSearched = false; // If the current raid was searched prevents double alert
 
+	// Storing boolean because I was calling client.getVarbit twice per onMenuEntryAdded even outside CoX
+	private boolean isStarted = false;
+	private boolean isChallengeMode = false;
+
 	@Override
 	protected void startUp() throws Exception
 	{
@@ -84,10 +89,14 @@ public class ScoutHelperPlugin extends Plugin
 	{
 		int CoX_ENTRY_ID = 49999;
 
-		if (e.getIdentifier() != CoX_ENTRY_ID || isRaidStarted() || isChallengeMode())
-		{
+		if (e.getIdentifier() != CoX_ENTRY_ID)
 			return;
-		}
+
+		if (isStarted)
+			return;
+
+		if (isChallengeMode)
+			return;
 
 		// Deprioritize 'Climb' for left click Reload
 		if (e.getOption().equals("Climb"))
@@ -175,16 +184,16 @@ public class ScoutHelperPlugin extends Plugin
 	@Subscribe
 	public void onRaidScouted(RaidScouted raidScouted)
 	{
-		if (isChallengeMode()) // Search irrelevant if Challenge Mode
+		if (isChallengeMode) // Search irrelevant if Challenge Mode
 		{
 			raidFound = false;
-			raidSearched = true;	// Prevent double check
+			raidSearched = true;
 			return;
 		}
 
 		Raid raid = raidScouted.getRaid();
 
-		if (raid == null || raidSearched || isRaidStarted())
+		if (raid == null || raidSearched || isStarted)
 		{
 			return;    // Prevent Double Alert
 		}
@@ -328,15 +337,19 @@ public class ScoutHelperPlugin extends Plugin
 		raidSearched = false;
 	}
 
-	private boolean isChallengeMode()
+	@Subscribe
+	public void onVarbitChanged(VarbitChanged varbitChanged)
 	{
-		final int VARBIT_CM_FLAG = 6385;
-		return client.getVarbitValue(VARBIT_CM_FLAG) == 1;
-	}
+		final int varbitId = varbitChanged.getVarbitId();
+		final int varbitValue = varbitChanged.getValue();
 
-	private boolean isRaidStarted()
-	{
-		return client.getVarbitValue(Varbits.RAID_STATE) == 1;
+		final int VARBIT_CM_FLAG = 6385;
+
+		if (varbitId == VARBIT_CM_FLAG)	// Update isChallengeMode
+			isChallengeMode = varbitValue == 1;
+
+		if (varbitId == Varbits.RAID_STATE) // Update isStarted
+			isStarted = varbitValue == 1;
 	}
 
 	@Provides

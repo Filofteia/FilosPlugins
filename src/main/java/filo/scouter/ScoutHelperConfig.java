@@ -2,6 +2,7 @@ package filo.scouter;
 
 import filo.scouter.config.Layout;
 import filo.scouter.config.Overload;
+import filo.scouter.config.OverloadPosition;
 import net.runelite.client.config.Config;
 import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
@@ -143,10 +144,35 @@ public interface ScoutHelperConfig extends Config
 		keyName = "overloadRooms",
 		name = "Overload Filter",
 		description = "A list of overload rooms you can filter <br><br>To select multiple use Ctrl-Click or Shift-Click <br><br>If you want none required Right-Click 'Overload Filter' -> 'Reset'",
-		section = overloadSection
+		section = overloadSection,
+		position = 0
 	)
 	default Set<Overload> overloadRooms()
 	{
 		return Collections.emptySet();
+	}
+
+	@ConfigItem(
+		keyName = "ovlPos",
+		name = "Preferred Location",
+		description = "Define a preferred location for the Overload to be found",
+		section = overloadSection,
+		position = 1
+	)
+	default OverloadPosition ovlPos()
+	{
+		return OverloadPosition.ANY_ROOM;
+	}
+
+	@ConfigItem(
+		keyName = "incPuzzleCombat",
+		name = "Include Puzzle Combat",
+		description = "If you want to include 'Tightrope' and 'Ice Demon' in 'First Combat'",
+		section = overloadSection,
+		position = 2
+	)
+	default boolean incPuzzleCombat()
+	{
+		return false;
 	}
 }

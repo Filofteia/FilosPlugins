@@ -26,6 +26,8 @@
 package filo.scouter;
 
 import com.google.inject.Provides;
+import filo.scouter.config.OverloadPosition;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
@@ -90,13 +92,19 @@ public class ScoutHelperPlugin extends Plugin
 		int CoX_ENTRY_ID = 49999;
 
 		if (e.getIdentifier() != CoX_ENTRY_ID)
+		{
 			return;
+		}
 
 		if (isStarted)
+		{
 			return;
+		}
 
 		if (isChallengeMode)
+		{
 			return;
+		}
 
 		// Deprioritize 'Climb' for left click Reload
 		if (e.getOption().equals("Climb"))
@@ -207,8 +215,35 @@ public class ScoutHelperPlugin extends Plugin
 		boolean rotationFound = !config.rotationEnabled();    // Skips the check if not enabled
 		boolean layoutFound = false;
 
-		List<RaidRoom> combatRooms = getOrderedRooms(raid, RoomType.COMBAT);
-		List<RaidRoom> puzzleRooms = getOrderedRooms(raid, RoomType.PUZZLE);
+		List<RaidRoom> allRooms = getOrderedRooms(raid, RoomType.COMBAT, RoomType.PUZZLE);
+		List<RaidRoom> combatRooms = allRooms.stream().filter(raidRoom -> raidRoom.getType() == RoomType.COMBAT).collect(Collectors.toList());
+		List<RaidRoom> puzzleRooms = allRooms.stream().filter(raidRoom -> raidRoom.getType() == RoomType.PUZZLE).collect(Collectors.toList());
+
+		// overloadFound means selected none so instantly know the result
+		if (config.ovlPos() == OverloadPosition.COMBAT_FIRST && !overloadFound)
+		{
+			RaidRoom firstTrueCombat = allRooms.stream()
+				.filter(r ->
+					!r.getName().equalsIgnoreCase("thieving") &&
+						!r.getName().equalsIgnoreCase("crabs")
+				)
+				.findFirst().orElse(null);
+
+			if (firstTrueCombat == null || firstTrueCombat.getName().isEmpty())
+			{
+				return; // I'm sure this is impossible but that yellow line annoys me. Shouldn't be able to return even with the config change.
+			}
+
+			String firstRoomName = config.incPuzzleCombat() ? firstTrueCombat.getName() : combatRooms.get(0).getName();
+
+			overloadFound = overloadSet.stream()
+				.anyMatch(overload -> firstRoomName.equalsIgnoreCase(overload.getRoomName()));
+
+			if (!overloadFound)
+			{
+				return; // Failed condition
+			}
+		}
 
 		// Combat Room Flags
 		for (RaidRoom room : combatRooms)
@@ -230,18 +265,10 @@ public class ScoutHelperPlugin extends Plugin
 				}
 			}
 
-			// Overload Flag
+			// overloadFound is false so guaranteed you're searching for one
 			if (!overloadFound)
 			{
-				for (Overload overload : overloadSet)
-				{
-					String overloadRoomName = overload.getRoomName();
-					if (roomName.equalsIgnoreCase(overloadRoomName))
-					{
-						overloadFound = true;
-						break;
-					}
-				}
+				overloadFound = overloadSet.stream().anyMatch(overload -> roomName.equalsIgnoreCase(overload.getRoomName()));
 			}
 		}
 
@@ -345,11 +372,15 @@ public class ScoutHelperPlugin extends Plugin
 
 		final int VARBIT_CM_FLAG = 6385;
 
-		if (varbitId == VARBIT_CM_FLAG)	// Update isChallengeMode
+		if (varbitId == VARBIT_CM_FLAG)    // Update isChallengeMode
+		{
 			isChallengeMode = varbitValue == 1;
+		}
 
 		if (varbitId == Varbits.RAID_STATE) // Update isStarted
+		{
 			isStarted = varbitValue == 1;
+		}
 	}
 
 	@Provides

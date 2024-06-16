@@ -24,7 +24,8 @@ Raid Settings:
 
 Overload Settings:
 - [Overload Filter](#1-overload-filter): Choose the overloads you are willing to accept (None = Prep/Ignore)
-
+- [Preferred Location](#2-preferred-location): Set a location in the raid that you would like the overload to be.
+- [Include Puzzle Combat](#3-include-puzzle-combe): Include 'Tightrope' and 'Ice Demon' inside of [Preferred Location's](#2-preferred-location) 'First Combat'
 ## Layout Settings
 
 ### 1) Layout Filter
@@ -88,6 +89,14 @@ A list of possible rooms below (exact text and case-insensitive):
 5) Vasa
 6) None (No Overload Required)
 
+### 2) Preferred Location
+
+1) Any Room : Any room may have an overload to meet the condition.
+2) First Combat : The first combat room must have an overload to meet the condition.
+
+### 3) Include Puzzle Combat
+This will include 'Tightrope' and 'Ice Demon' as Combat rooms to not meet the conditions if they are before the Overload for 'First Combat' option.
+
 # Known Issues and potential fixes:
 
 ## Reload Option remains on a good raid
@@ -96,7 +105,7 @@ I believe the main cause of this is Menu Entry Swapper.
 
 To fix this you may do the following:
 
-1) Shift Right-click the Entry Door inside of the raid
+1) Shift Right-click the Entry Door inside the raid
 2) 'Swap left click' -> 'Reset'
 
 Other plugins that modify menu options may also cause this issue.;

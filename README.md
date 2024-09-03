@@ -12,7 +12,7 @@ General Settings:
 - Notify on Raid: Sends a Notification upon finding a suitable raid
 
 Layout Settings:
-- [Layout Filter](#1-layout-filter): Allows you to choose a preferred raid type (3C2p, 4C1P, 4C2P) (None = Exception List)
+- [Layout Filter](#1-layout-filter): Allows you to choose a preferred raid type (3C2P, 4C1P, 4C2P) (None = Exception List)
 - [Exception Layout](#2-exception-layout-ignore-filter): Allows a specified exception to the previous option
 
 Raid Settings:
@@ -21,6 +21,7 @@ Raid Settings:
 - [Blocked Rooms](#2-blocked-rooms): Block specific rooms
 - Block Unknown Combat: Specifies if you want to block unknown combat rooms
 - Block Unknown Puzzles: Specifies if you want to block unknown puzzle rooms
+- [Preferred Crabs](#3-preferred-crabs): Specify a certain crab layout you prefer (Any, Rare, Good).
 
 Overload Settings:
 - [Overload Filter](#1-overload-filter): Choose the overloads you are willing to accept (None = Prep/Ignore)
@@ -77,6 +78,13 @@ A list of possible rooms below (exact text and case-insensitive):
 10) Ice Demon
 11) Tightrope
 12) Thieving
+
+### 3) Preferred Crabs
+Select a preferred crab layout.
+
+1) Any (Type A, B anc C)
+2) Rare (Type B and C)
+3) Good (Only Type C)
 
 ## Overload Settings
 

@@ -26,7 +26,9 @@
 package filo.scouter;
 
 import com.google.inject.Provides;
+import filo.scouter.config.Crabs;
 import filo.scouter.config.OverloadPosition;
+import filo.scouter.data.PuzzleLayout;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
@@ -70,7 +72,6 @@ public class ScoutHelperPlugin extends Plugin
 	private boolean raidFound = false;
 	private boolean raidSearched = false; // If the current raid was searched prevents double alert
 
-	// Storing boolean because I was calling client.getVarbit twice per onMenuEntryAdded even outside CoX
 	private boolean isStarted = false;
 	private boolean isChallengeMode = false;
 
@@ -174,50 +175,75 @@ public class ScoutHelperPlugin extends Plugin
 	private List<String> getConfigRotations()
 	{
 		List<String> rotations = new ArrayList<>();
-		String rotationConfig = config.rotationList();
 
-		if (rotationConfig.isBlank())
-		{
+		if (config.rotationList().isBlank())
 			return rotations;
-		}
 
-		for (String line : rotationConfig.split("\\n"))
-		{
+		for (String line : config.rotationList().split("\\n"))
 			rotations.add(line.replaceAll("(\\s*,\\s*)", ","));    // Spaces before or after comma allowed
-		}
 
 		return rotations;
+	}
+
+	private boolean verifyCrabs(String raidLayout, List<RaidRoom> puzzles)
+	{
+		if (config.preferredCrabs() == Crabs.ANY)
+			return true;    // Always good
+		if (!puzzles.contains(RaidRoom.CRABS))
+			return true;	// Default because you can block other puzzles
+
+		int crabIndex = puzzles.indexOf(RaidRoom.CRABS);
+
+		PuzzleLayout puzzleLayout = PuzzleLayout.getByLayout(raidLayout);
+		if (puzzleLayout == null)
+			return false;	// This is not a layout my plugin supports so return false
+
+		String crabType = puzzleLayout.getPuzzleType(crabIndex);
+		switch (crabType)
+		{
+			case "N/a": // Only occurs when you are out of index or no crabs exist, shouldn't occur but will stay in line of defaulting true
+			case "C":
+				return true;
+			case "A":
+				return false;
+			case "B":
+				return config.preferredCrabs() == Crabs.RARE;
+		}
+
+		return false;
 	}
 
 	@Subscribe
 	public void onRaidScouted(RaidScouted raidScouted)
 	{
-		if (isChallengeMode) // Search irrelevant if Challenge Mode
+		if (isChallengeMode)
 		{
-			raidFound = false;
 			raidSearched = true;
 			return;
 		}
 
 		Raid raid = raidScouted.getRaid();
-
 		if (raid == null || raidSearched || isStarted)
 		{
-			return;    // Prevent Double Alert
+			return; // Prevent Double Alert
 		}
 
+		String raidLayoutCode = raid.getLayout().toCodeString();
 		raidSearched = true;
-
-		Set<Overload> overloadSet = config.overloadRooms();
-		List<String> blockedRooms = Text.fromCSV(config.blockedRooms());
-
-		boolean overloadFound = overloadSet.isEmpty();    // Skips the check if empty
-		boolean rotationFound = !config.rotationEnabled();    // Skips the check if not enabled
-		boolean layoutFound = false;
 
 		List<RaidRoom> allRooms = getOrderedRooms(raid, RoomType.COMBAT, RoomType.PUZZLE);
 		List<RaidRoom> combatRooms = allRooms.stream().filter(raidRoom -> raidRoom.getType() == RoomType.COMBAT).collect(Collectors.toList());
 		List<RaidRoom> puzzleRooms = allRooms.stream().filter(raidRoom -> raidRoom.getType() == RoomType.PUZZLE).collect(Collectors.toList());
+		Layout raidLayout = Layout.findLayout(combatRooms.size(), puzzleRooms.size());
+
+		Set<Layout> layoutFilter = config.layoutType();;
+		Set<Overload> overloadFilter = config.overloadRooms();
+		List<String> roomFilter = Text.fromCSV(config.blockedRooms());
+
+		boolean crabPuzzleFlag = verifyCrabs(raidLayoutCode, puzzleRooms);
+		boolean layoutFound = layoutFilter.stream().anyMatch(layout -> raidLayout == layout);	// If current match fits the filter list if not we'll check exception later
+		boolean overloadFound = overloadFilter.isEmpty();    	// Skips the check if empty
+		boolean rotationFound = !config.rotationEnabled();		// Skips the check if not enabled
 
 		// overloadFound means selected none so instantly know the result
 		if (config.ovlPos() == OverloadPosition.COMBAT_FIRST && !overloadFound)
@@ -236,7 +262,7 @@ public class ScoutHelperPlugin extends Plugin
 
 			String firstRoomName = config.incPuzzleCombat() ? firstTrueCombat.getName() : combatRooms.get(0).getName();
 
-			overloadFound = overloadSet.stream()
+			overloadFound = overloadFilter.stream()
 				.anyMatch(overload -> firstRoomName.equalsIgnoreCase(overload.getRoomName()));
 
 			if (!overloadFound)
@@ -250,111 +276,76 @@ public class ScoutHelperPlugin extends Plugin
 		{
 			String roomName = room.getName();
 
-			// Unknown Flag
 			if (roomName.equalsIgnoreCase("unknown (combat)") && config.blockedUnknownCombat())
-			{
 				return;
-			}
 
-			// Blocked Room
-			for (String blockedRoom : blockedRooms)
+			for (String blockedRoom : roomFilter)
 			{
 				if (roomName.equalsIgnoreCase(blockedRoom))
-				{
 					return;
-				}
 			}
 
-			// overloadFound is false so guaranteed you're searching for one
 			if (!overloadFound)
-			{
-				overloadFound = overloadSet.stream().anyMatch(overload -> roomName.equalsIgnoreCase(overload.getRoomName()));
-			}
+				overloadFound = overloadFilter.stream().anyMatch(overload -> roomName.equalsIgnoreCase(overload.getRoomName()));
 		}
 
-		// Puzzle Room Flags
 		for (RaidRoom room : puzzleRooms)
 		{
 			String roomName = room.getName();
 
-			// Unknown Flag
 			if (roomName.equalsIgnoreCase("unknown (puzzle)") && config.blockedUnknownPuzzles())
-			{
 				return;
-			}
 
-			// Blocked Room (Return if any)
-			for (String blockedRoom : blockedRooms)
+			for (String blockedRoom : roomFilter)
 			{
 				if (roomName.equalsIgnoreCase(blockedRoom))
-				{
+					return;
+			}
+		}
+
+		if (!rotationFound)
+		{
+			List<String> rotationList = getConfigRotations();
+			String activeRotation = getRaidRotation(raid);
+
+			for (String rotation : rotationList)
+			{
+				if (activeRotation.equalsIgnoreCase(rotation)) {	//  We just complete the raid because we already did the other calcs (Combat, Puzzle & Crabs)
+					raidFound = true;
+					notifier.notify(String.format("Raid Found! (%s)", getRaidRotation(raid)));
 					return;
 				}
 			}
-		}
 
-		List<String> rotations = getConfigRotations();
-		String raidRotation = getRaidRotation(raid);
-
-		// Rotation Flag
-		if (!rotationFound)
-		{
-			if (!rotations.isEmpty())
-			{
-				for (String rotation : rotations)
-				{
-					if (raidRotation.equalsIgnoreCase(rotation))
-					{
-						rotationFound = true;
-						layoutFound = true;    // if rotation is listed just bypass layout
-						overloadFound = true; // also bypass this
-						break;
-					}
-				}
-			}
-			else    // Prevent an empty rotation from preventing raids
-			{
+			if (rotationList.isEmpty())
 				rotationFound = true;
-			}
 		}
 
-		// Layout Flag
-		for (Layout layout : config.layoutType())
+		if (!layoutFound)
 		{
-			if (layoutFound)    // Skip if previous or rotation
+			String exceptionList = config.layoutKeys().replaceAll("(\\s*)", "");
+			for (String layout : exceptionList.split(","))
 			{
-				break;
-			}
+				if (!raidLayoutCode.equalsIgnoreCase(layout))
+					continue;
 
-			if (layout.getMaxCombat() == combatRooms.size() && layout.getMaxPuzzles() == puzzleRooms.size())
-			{
 				layoutFound = true;
 				break;
 			}
 		}
 
-		// Layout Specific Flag
-		String layoutKeys = config.layoutKeys().replace(" ", "");
-		for (String layout : layoutKeys.split(","))
-		{
-			if (layoutFound)    // Skip if previous or rotation
-			{
-				break;
-			}
+		// Overall Checker
+		if (!crabPuzzleFlag)
+			return;
+		if (!layoutFound)
+			return;
+		if (!overloadFound)
+			return;
+		if (!rotationFound)
+			return;
 
-			if (raid.getLayout().toCodeString().equalsIgnoreCase(layout))
-			{
-				layoutFound = true;
-				break;
-			}
-		}
-
-		// All Flags
-		if (layoutFound && overloadFound && rotationFound)
-		{
-			raidFound = true;
-			notifier.notify(String.format("Raid Found! (%s)", getRaidRotation(raid)));
-		}
+		raidFound = true;
+		notifier.notify(String.format("Raid Found! (%s)", getRaidRotation(raid)));
 	}
 
 	@Subscribe

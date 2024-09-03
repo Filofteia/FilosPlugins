@@ -1,6 +1,7 @@
 package filo.scouter.config;
 
 import lombok.Getter;
+import net.runelite.client.party.PartyMember;
 
 @Getter
 public enum Layout
@@ -21,7 +22,7 @@ public enum Layout
 				return "4C1P";
 			}
 		},
-	L_4c2P(4, 2)
+	L_4C2P(4, 2)
 		{
 			@Override
 			public String toString()
@@ -37,5 +38,22 @@ public enum Layout
 	{
 		this.maxCombat = combat;
 		this.maxPuzzles = puzzles;
+	}
+
+	/**
+	 * Return the accositated layout to your request
+	 * @param combatQty The amount of Combat Rooms in the raid
+	 * @param puzzleQty The amount of Puzzle Rooms in the raid
+	 * @return That Layout or null
+	 */
+	public static Layout findLayout(int combatQty, int puzzleQty)
+	{
+		for (Layout layout : Layout.values())
+		{
+			if (layout.maxCombat == combatQty && layout.maxPuzzles == puzzleQty)
+				return layout;
+		}
+
+		return null;
 	}
 }

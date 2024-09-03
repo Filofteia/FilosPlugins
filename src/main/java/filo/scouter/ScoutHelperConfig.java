@@ -1,5 +1,6 @@
 package filo.scouter;
 
+import filo.scouter.config.Crabs;
 import filo.scouter.config.Layout;
 import filo.scouter.config.Overload;
 import filo.scouter.config.OverloadPosition;
@@ -138,6 +139,18 @@ public interface ScoutHelperConfig extends Config
 	default boolean blockedUnknownPuzzles()
 	{
 		return true;
+	}
+
+	@ConfigItem(
+		keyName = "preferredCrabs",
+		name = "Preferred Crabs",
+		description = "Filter crabs to your preferred type",
+		section = raidSection,
+		position = 5
+	)
+	default Crabs preferredCrabs()
+	{
+		return Crabs.ANY;
 	}
 
 	@ConfigItem(

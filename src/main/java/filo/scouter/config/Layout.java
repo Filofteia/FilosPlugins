@@ -1,7 +1,6 @@
 package filo.scouter.config;
 
 import lombok.Getter;
-import net.runelite.client.party.PartyMember;
 
 @Getter
 public enum Layout

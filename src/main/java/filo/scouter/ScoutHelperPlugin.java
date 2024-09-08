@@ -310,10 +310,12 @@ public class ScoutHelperPlugin extends Plugin
 
 			for (String rotation : rotationList)
 			{
-				if (activeRotation.equalsIgnoreCase(rotation)) {	//  We just complete the raid because we already did the other calcs (Combat, Puzzle & Crabs)
-					raidFound = true;
-					notifier.notify(String.format("Raid Found! (%s)", getRaidRotation(raid)));
-					return;
+				if (activeRotation.equalsIgnoreCase(rotation))
+				{    //  Doesn't include puzzles, but it should skip Overload, Layout and Rotation checks because the user specified the combat rooms
+					layoutFound = true; // Look into skipping this because of 4c2p 4c1p overlap
+					rotationFound = true;
+					overloadFound = true;
+					break;
 				}
 			}
 

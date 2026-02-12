@@ -26,21 +26,26 @@
 package filo.scouter;
 
 import com.google.inject.Provides;
-import filo.scouter.config.Crabs;
-import filo.scouter.config.OverloadPosition;
+import filo.scouter.config.*;
 import filo.scouter.data.PuzzleLayout;
+
+import java.awt.*;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
+import filo.scouter.data.RoomEnum;
 import lombok.extern.slf4j.Slf4j;
+import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
-import net.runelite.api.Varbits;
 import net.runelite.api.events.VarbitChanged;
+import net.runelite.api.gameval.VarbitID;
 import net.runelite.client.Notifier;
+import net.runelite.client.chat.ChatMessageBuilder;
+import net.runelite.client.chat.ChatMessageManager;
+import net.runelite.client.chat.QueuedMessage;
 import net.runelite.client.eventbus.Subscribe;
+import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.config.ConfigManager;
-import filo.scouter.config.Layout;
-import filo.scouter.config.Overload;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.raids.Raid;
 import net.runelite.client.plugins.raids.RaidRoom;
@@ -68,16 +73,26 @@ public class ScoutHelperPlugin extends Plugin
 	private ScoutHelperConfig config;
 	@Inject
 	private Notifier notifier;
+	@Inject
+	private ConfigManager configManager;
+	@Inject
+	private ChatMessageManager chatMessageManager;
 
 	private boolean raidFound = false;
-	private boolean raidSearched = false; // If the current raid was searched prevents double alert
+	private boolean raidSearched = false;
 
+	// Varbit
+	private boolean inRaid = false;
 	private boolean isStarted = false;
 	private boolean isChallengeMode = false;
+
+	private RaidScouted scoutedEvent;
 
 	@Override
 	protected void startUp() throws Exception
 	{
+		migrateConfig();	// If I have another migration I'll improve it
+		scoutedEvent = null;
 		raidFound = false;
 		raidSearched = false;
 	}
@@ -153,15 +168,25 @@ public class ScoutHelperPlugin extends Plugin
 		return roomList;
 	}
 
+	private List<RaidRoom> getOrderedRooms(Raid raid, boolean includePuzzle)
+	{
+		if (includePuzzle)
+		{
+			return getOrderedRooms(raid, RoomType.COMBAT, RoomType.PUZZLE);
+		}
+
+		return getOrderedRooms(raid, RoomType.COMBAT);
+	}
+
 	/**
 	 * @param raid
 	 * @return String: Rotation of the Raid
 	 */
-	private String getRaidRotation(Raid raid)
+	private String getRaidRotation(Raid raid, boolean includePuzzles)
 	{
 		StringBuilder rotation = new StringBuilder();
 
-		for (RaidRoom room : getOrderedRooms(raid, RoomType.COMBAT))
+		for (RaidRoom room : getOrderedRooms(raid, includePuzzles))
 		{
 			rotation.append(room.getName()).append(",");
 		}
@@ -228,25 +253,37 @@ public class ScoutHelperPlugin extends Plugin
 			return; // Prevent Double Alert
 		}
 
-		String raidLayoutCode = raid.getLayout().toCodeString();
+		if (config.showUpdateMessage())
+			sendUpdateMessage();
+
 		raidSearched = true;
+		scoutedEvent = raidScouted;
 
 		List<RaidRoom> allRooms = getOrderedRooms(raid, RoomType.COMBAT, RoomType.PUZZLE);
-		List<RaidRoom> combatRooms = allRooms.stream().filter(raidRoom -> raidRoom.getType() == RoomType.COMBAT).collect(Collectors.toList());
-		List<RaidRoom> puzzleRooms = allRooms.stream().filter(raidRoom -> raidRoom.getType() == RoomType.PUZZLE).collect(Collectors.toList());
-		Layout raidLayout = Layout.findLayout(combatRooms.size(), puzzleRooms.size());
+		List<RaidRoom> combatRooms = allRooms.stream()
+				.filter(raidRoom -> raidRoom.getType() == RoomType.COMBAT)
+				.collect(Collectors.toList());
+		List<RaidRoom> puzzleRooms = allRooms.stream()
+				.filter(raidRoom -> raidRoom.getType() == RoomType.PUZZLE)
+				.collect(Collectors.toList());
 
 		Set<Layout> layoutFilter = config.layoutType();;
 		Set<Overload> overloadFilter = config.overloadRooms();
 		List<String> roomFilter = Text.fromCSV(config.blockedRooms());
 
+		String raidLayoutCode = raid.getLayout().toCodeString();
+		Layout raidLayout = Layout.findLayout(combatRooms.size(), puzzleRooms.size());
+
 		boolean crabPuzzleFlag = verifyCrabs(raidLayoutCode, puzzleRooms);
-		boolean layoutFound = layoutFilter.stream().anyMatch(layout -> raidLayout == layout);	// If current match fits the filter list if not we'll check exception later
-		boolean overloadFound = overloadFilter.isEmpty();    	// Skips the check if empty
+		boolean layoutFound =
+				config.layoutMode() != IncludeMode.EXCLUSIVE
+				&& (layoutFilter.isEmpty() || layoutFilter.contains(raidLayout));
+
+		boolean overloadFound =	overloadFilter.isEmpty();
 		boolean rotationFound = !config.rotationEnabled();		// Skips the check if not enabled
 
 		// overloadFound means selected none so instantly know the result
-		if (config.ovlPos() == OverloadPosition.COMBAT_FIRST && !overloadFound)
+		if (config.ovlPos() == OverloadPosition.FIRST_COMBAT && !overloadFound)
 		{
 			RaidRoom firstTrueCombat = allRooms.stream()
 				.filter(r ->
@@ -286,7 +323,9 @@ public class ScoutHelperPlugin extends Plugin
 			}
 
 			if (!overloadFound)
-				overloadFound = overloadFilter.stream().anyMatch(overload -> roomName.equalsIgnoreCase(overload.getRoomName()));
+				overloadFound = overloadFilter
+						.stream()
+						.anyMatch(overload -> roomName.equalsIgnoreCase(overload.getRoomName()));
 		}
 
 		for (RaidRoom room : puzzleRooms)
@@ -306,13 +345,17 @@ public class ScoutHelperPlugin extends Plugin
 		if (!rotationFound)
 		{
 			List<String> rotationList = getConfigRotations();
-			String activeRotation = getRaidRotation(raid);
+			String activeCombatRotation = getRaidRotation(raid, false);
+			String activePuzzleRotation = getRaidRotation(raid, true);
 
 			for (String rotation : rotationList)
 			{
-				if (activeRotation.equalsIgnoreCase(rotation))
-				{    //  Doesn't include puzzles, but it should skip Overload, Layout and Rotation checks because the user specified the combat rooms
-					layoutFound = true; // Look into skipping this because of 4c2p 4c1p overlap
+				boolean hasPuzzleRooms = RoomEnum.hasPuzzleRoom(rotation);
+
+				if (
+						(!hasPuzzleRooms && activeCombatRotation.equalsIgnoreCase(rotation)) ||
+						(hasPuzzleRooms && activePuzzleRotation.equalsIgnoreCase(rotation)))
+				{
 					rotationFound = true;
 					overloadFound = true;
 					break;
@@ -323,7 +366,7 @@ public class ScoutHelperPlugin extends Plugin
 				rotationFound = true;
 		}
 
-		if (!layoutFound)
+		if (!layoutFound && config.layoutMode() != IncludeMode.DISABLED)
 		{
 			String exceptionList = config.layoutKeys().replaceAll("(\\s*)", "");
 			for (String layout : exceptionList.split(","))
@@ -334,9 +377,16 @@ public class ScoutHelperPlugin extends Plugin
 				layoutFound = true;
 				break;
 			}
+
+			// Should include this iin the initial check
+			if (config.layoutMode() == IncludeMode.EXCLUSIVE
+					&& exceptionList.isBlank()
+					&& layoutFilter.contains(raidLayout))
+			{
+				layoutFound = true;
+			}
 		}
 
-		// Overall Checker
 		if (!crabPuzzleFlag)
 			return;
 		if (!layoutFound)
@@ -347,7 +397,9 @@ public class ScoutHelperPlugin extends Plugin
 			return;
 
 		raidFound = true;
-		notifier.notify(String.format("Raid Found! (%s)", getRaidRotation(raid)));
+
+		if (config.notifyRaid().isEnabled())
+			notifier.notify(config.notifyRaid(), String.format("Raid Found! (%s)", getRaidRotation(raid, true)));
 	}
 
 	@Subscribe
@@ -363,16 +415,90 @@ public class ScoutHelperPlugin extends Plugin
 		final int varbitId = varbitChanged.getVarbitId();
 		final int varbitValue = varbitChanged.getValue();
 
-		final int VARBIT_CM_FLAG = 6385;
-
-		if (varbitId == VARBIT_CM_FLAG)    // Update isChallengeMode
+		if (varbitId == VarbitID.RAIDS_CHALLENGE_MODE)    // Update isChallengeMode
 		{
 			isChallengeMode = varbitValue == 1;
 		}
 
-		if (varbitId == Varbits.RAID_STATE) // Update isStarted
+		if (varbitId == VarbitID.RAIDS_CLIENT_PROGRESS) // Update isStarted
 		{
 			isStarted = varbitValue == 1;
+		}
+
+		if (varbitId == VarbitID.RAIDS_CLIENT_INDUNGEON)
+		{
+			inRaid = varbitValue == 1;
+		}
+	}
+
+	@Subscribe
+	private void onConfigChanged(ConfigChanged e)
+	{
+		if (!e.getGroup().equalsIgnoreCase("coxscoutingqol"))
+			return;
+
+		if (inRaid && scoutedEvent != null)
+		{
+			raidFound = false;
+			raidSearched = false;
+			onRaidScouted(scoutedEvent); // Probably scuffed
+		}
+	}
+
+	private void migrateConfig()
+	{
+		if (config.configVer() == 0)
+		{
+			String group = "coxscoutingqol";
+			String key_ver = "configVer";
+
+			String key_ovlPos = "overloadPosition";
+			String ovlPos = configManager.getConfiguration(group, key_ovlPos);
+			if (ovlPos != null)
+			{
+				if (ovlPos.equals("COMBAT_FIRST"))
+				{
+					configManager.setConfiguration(group, key_ovlPos, OverloadPosition.FIRST_COMBAT);
+				}
+			}
+
+			configManager.setConfiguration(group, key_ver, 1);
+		}
+	}
+
+	private void sendUpdateMessage()
+	{
+		if (config.lastUpdateMessageVer() == 0)	// when I make more updates I'll make this append per version and make sure to remove useless notes.
+		{
+			String group = "coxscoutingqol";
+			String key_ver = "lastUpdateMessageVer";
+
+			final ChatMessageBuilder messageBuilder = new ChatMessageBuilder();
+			Color pluginColour = new Color(64, 51, 255);
+
+			messageBuilder.append(pluginColour, "Cox Scouting QoL has been updated!");
+
+			messageBuilder.append("\n")
+					.append(pluginColour, "This message will only appear once, if you wish to disable it you can in the config!");
+
+			messageBuilder.append("\n")
+					.append("- Added Puzzle support for Rotations");
+
+			messageBuilder.append("\n")
+					.append("- Added option 'Layout Modes' for Layout Exceptions");
+
+			messageBuilder.append("\n")
+					.append("- Fixed 4C1P and 4C2P overlap in Rotations");
+
+			messageBuilder.append("\n")
+					.append("- Behaviour Changes: No selected 'Layout Filter' now accepts all layouts rather than just the exception list, to enable old behaviour set Layout Mode to Exclusive");
+
+			chatMessageManager.queue(QueuedMessage.builder()
+					.type(ChatMessageType.CONSOLE)
+					.runeLiteFormattedMessage(messageBuilder.build())
+					.build());
+
+			configManager.setConfiguration(group, key_ver, 1);
 		}
 	}
 

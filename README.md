@@ -1,6 +1,21 @@
 # Cox Scouting QoL
 
-CoX Scouting QoL allows you to define a good raid and allows removes the 'Reload' and 'Climb' option when found.
+CoX Scouting QoL allows you to filter a good raid and allows removes the 'Reload' and 'Climb' option when found.
+
+## Update Log:
+An update log for a plugin is kind of useless, however it might help if you've not raided in a while and want to see some of the changes.
+Because some of these are logic based I guess.
+### 0.9 (03/02/2026)
+- Added Puzzle Support to the 'Rotations' option
+- Added 'Exception Mode' to allow for more control over the 'Exception List'
+- Added a 'Scout Reload' upon changing config
+- Prevent Rotations from bypassing the Layout Filter
+
+## Known Issues
+### Issues:
+- Menu Entry Swapper overrides the door options (Solution with the Error Logger)
+- Specific Interactions between settings (The Side Panel should help with this)
+- Large Raid Support
 
 ## Configuration Explained
 
@@ -10,23 +25,28 @@ And to reset you can right-click the option (Overload Filter / Layout Filter) ->
 
 General Settings:
 - Notify on Raid: Sends a Notification upon finding a suitable raid
+- Update Message: Notify the user of changes to the plugin upon scouting.
 
 Layout Settings:
 - [Layout Filter](#1-layout-filter): Allows you to choose a preferred raid type (3C2P, 4C1P, 4C2P) (None = Exception List)
-- [Exception Layout](#2-exception-layout-ignore-filter): Allows a specified exception to the previous option
+- [Exception Mode](#2-exception-layout-mode): Change the mode for the exception layout to be applied
+- [Exception Layout](#3-exception-layout): Allows a specified exception to the previous option
 
-Raid Settings:
+
+Rotation Settings
 - Rotation Toggle: Toggles the next option
 - [Rotations](#1-rotations): List rotations such as 'vasa,shamans,vespula' and split with making a new line
-- [Blocked Rooms](#2-blocked-rooms): Block specific rooms
+
+Room Settings:
+- [Blocked Rooms](#1-blocked-rooms): Block specific rooms
 - Block Unknown Combat: Specifies if you want to block unknown combat rooms
 - Block Unknown Puzzles: Specifies if you want to block unknown puzzle rooms
-- [Preferred Crabs](#3-preferred-crabs): Specify a certain crab layout you prefer (Any, Rare, Good).
+- [Preferred Crabs](#2-preferred-crabs): Specify a certain crab layout you prefer (Any, Rare, Good).
 
 Overload Settings:
 - [Overload Filter](#1-overload-filter): Choose the overloads you are willing to accept (None = Prep/Ignore)
 - [Preferred Location](#2-preferred-location): Set a location in the raid that you would like the overload to be.
-- [Include Puzzle Combat](#3-include-puzzle-combe): Include 'Tightrope' and 'Ice Demon' inside of [Preferred Location's](#2-preferred-location) 'First Combat'
+- [Include Puzzle Combat](#3-include-puzzle-combat): Include 'Tightrope' and 'Ice Demon' inside [Preferred Location's](#2-preferred-location) 'First Combat'
 ## Layout Settings
 
 ### 1) Layout Filter
@@ -38,53 +58,94 @@ Layout Filter has a set of common raids so that you can select your preferred ra
 3) 4C2P = 4 Combat 2 Puzzle
 4) None = Only Exception Layouts
 
-### 2) Exception Layout (Ignore Filter)
+### 2) Exception Layout mode
+Allows you to choose the method:
 
-An exception to the Layout Filter
+- Inclusive: Includes the list alongside your scout filter
 
-Example: With the filter 4C1P you could add 'FSCCS PCPSF' or 'FSCCSPCPSF' and that would allow this specific 3C2P through the filter.
+- Exclusive: Only search for the specified layouts
 
-Random Example: 'FSPCCPSCCF,SCPFCCCPSF,FSCCSPCPSF,FSCCPPCSCF,SCFCPCSCFS,SCPFCCCSSF,SCSPFCCSPF' (This is just an example do not use this)
+For example, you could add a specific 4C2P and have the filter set to 3C2P.
 
-## Raid Settings
+- Inclusive: The 4C2P would be accepted alongside the 3C2P Filter.
+- Exclusive: The 4C2P would be the ONLY layout allowed, even the 3C2P would be filtered out.
+
+Be careful, as this could make your scouting time very long.
+
+### 3) Exception Layout
+
+List of possible Layout Codes
+
+3C2P
+- FSCCSPCPSF
+- SCPFCCSPSF
+- SFCCSPCPSF
+- SPSFPCCCSF
+- SCSPFCCSPF
+
+
+4C1P
+- SCPFCCCSSF
+- SCCFCPSCSF
+- SCFCPCSCFS
+
+4C2P
+- SCFPCCSPCF
+- SCFPCSCPCF
+- SFCCPCSCPF
+- SCFCPCCSPF
+- SPCFCCSPCF
+- FSCCPPCSCF
+- SCFPCPCCSF
+- FSCPCCSCPF
+- SCFCPCSCPF
+- SCPFCCSPCF
+- SPCFCSCCPF
+- SCPFCCCPSF
+- FSPCCPSCCF
+- SCPFCPCSCF
+- SCCFPCCSPF
+
+## Rotation Settings
 
 ### 1) Rotations
 
 Rotations allows you to set a defined rotation (vasa,shamans,vespula)
 
-You can create multiple rules by putting them on the next line:
+You can add multiple rotations by adding them on new lines. Also you can now add puzzles!
 
-vasa,shamans,vespula
+vasa,thieving,shamans,vespula,crabs
 
-vespula,shamans,vasa
+muttadiles,shamans,mystics
 
-vasa,tekton,vespula
+## Room Settings
 
-vespula,tekton,vasa
-
-### 2) Blocked Rooms
+### 1) Blocked Rooms
 
 A list of possible rooms below (exact text and case-insensitive):
 
-1) Tekton
-2) Muttadiles
-3) Guardians
-4) Vespula
-5) Shamans
-6) Vasa
-7) Vanguards
-8) Mystics
-9) Crabs
-10) Ice Demon
-11) Tightrope
-12) Thieving
+Combats:
+- Tekton
+- Muttadiles
+- Guardians
+- Vespula
+- Shamans
+- Vasa
+- Vanguards
+- Mystics
 
-### 3) Preferred Crabs
-Select a preferred crab layout.
+Puzzles:
+- Crabs
+- Ice Demon
+- Tightrope
+- Thieving
 
-1) Any (Type A, B anc C)
-2) Rare (Type B and C)
-3) Good (Only Type C)
+### 2) Preferred Crabs
+Allows you to filter a preferred crab room:
+
+- Any - Any crab variation
+- Rare - Rare or Good crab variation
+- Good - Only Good Crab variation
 
 ## Overload Settings
 
@@ -95,17 +156,22 @@ Select a preferred crab layout.
 3) Vanguard
 4) Vespula
 5) Vasa
-6) None (No Overload Required)
+
+Select your 'Overload' rooms, the raid will check for one of these.
+
+If you wish to clear the list you can right-click 'Overload Filter' and press 'reset'.
 
 ### 2) Preferred Location
 
-1) Any Room : Any room may have an overload to meet the condition.
-2) First Combat : The first combat room must have an overload to meet the condition.
+- Any Room
+- First Combat
+
+This is for the position of the Overload.
 
 ### 3) Include Puzzle Combat
-This will include 'Tightrope' and 'Ice Demon' as Combat rooms to not meet the conditions if they are before the Overload for 'First Combat' option.
+If selected both Tightrope and Ice Demon are included in the 'First Combat' filter.
 
-# Known Issues and potential fixes:
+# Current Fixes
 
 ## Reload Option remains on a good raid
 

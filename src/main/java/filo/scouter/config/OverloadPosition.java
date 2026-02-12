@@ -6,14 +6,7 @@ import lombok.Getter;
 public enum OverloadPosition
 {
 	ANY_ROOM("Any Rooms"),
-	COMBAT_FIRST("First Combat") // This is weird, but it doesn't reset user settings.
-	{
-		@Override
-		public String toString()
-		{
-			return "Combat First";
-		};
-	};
+	FIRST_COMBAT("First Combat"); // that was scuffed, and didn't work.
 
 	private final String roomType;
 

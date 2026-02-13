@@ -27,7 +27,9 @@ public enum RoomEnum {
         for (RoomEnum roomEnum : values())
         {
             if (roomEnum.roomNames.contains(roomNameLower))
+            {
                 return roomEnum;
+            }
         }
 
         return null;

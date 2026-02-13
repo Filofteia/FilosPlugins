@@ -1,8 +1,15 @@
 package filo.scouter;
 
-import filo.scouter.config.*;
-import net.runelite.client.config.*;
-
+import filo.scouter.config.Crabs;
+import filo.scouter.config.IncludeMode;
+import filo.scouter.config.Layout;
+import filo.scouter.config.Overload;
+import filo.scouter.config.OverloadPosition;
+import net.runelite.client.config.Config;
+import net.runelite.client.config.ConfigGroup;
+import net.runelite.client.config.ConfigItem;
+import net.runelite.client.config.ConfigSection;
+import net.runelite.client.config.Notification;
 import java.util.Collections;
 import java.util.Set;
 

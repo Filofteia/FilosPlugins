@@ -26,10 +26,13 @@
 package filo.scouter;
 
 import com.google.inject.Provides;
-import filo.scouter.config.*;
+import filo.scouter.config.Crabs;
+import filo.scouter.config.IncludeMode;
+import filo.scouter.config.Layout;
+import filo.scouter.config.Overload;
+import filo.scouter.config.OverloadPosition;
 import filo.scouter.data.PuzzleLayout;
-
-import java.awt.*;
+import java.awt.Color;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import filo.scouter.data.RoomEnum;
@@ -468,7 +471,7 @@ public class ScoutHelperPlugin extends Plugin
 
 	private void sendUpdateMessage()
 	{
-		if (config.lastUpdateMessageVer() == 0)	// when I make more updates I'll make this append per version and make sure to remove useless notes.
+		if (config.lastUpdateMessageVer() == 0)
 		{
 			String group = "coxscoutingqol";
 			String key_ver = "lastUpdateMessageVer";
@@ -479,7 +482,7 @@ public class ScoutHelperPlugin extends Plugin
 			messageBuilder.append(pluginColour, "Cox Scouting QoL has been updated!");
 
 			messageBuilder.append("\n")
-					.append(pluginColour, "This message will only appear once, if you wish to disable it you can in the config!");
+					.append(pluginColour, "This message will only appear once. You can in the config!");
 
 			messageBuilder.append("\n")
 					.append("- Added Puzzle support for Rotations");
@@ -491,7 +494,7 @@ public class ScoutHelperPlugin extends Plugin
 					.append("- Fixed 4C1P and 4C2P overlap in Rotations");
 
 			messageBuilder.append("\n")
-					.append("- Behaviour Changes: No selected 'Layout Filter' now accepts all layouts rather than just the exception list, to enable old behaviour set Layout Mode to Exclusive");
+					.append("- Behaviour Changes: When no 'Layout Filter' is selected, all layouts are accepted. Restore old behaviour by setting 'Layout Mode' to 'Exclusive'");
 
 			chatMessageManager.queue(QueuedMessage.builder()
 					.type(ChatMessageType.CONSOLE)

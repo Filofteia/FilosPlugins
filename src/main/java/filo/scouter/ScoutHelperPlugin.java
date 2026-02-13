@@ -482,7 +482,7 @@ public class ScoutHelperPlugin extends Plugin
 			messageBuilder.append(pluginColour, "Cox Scouting QoL has been updated!");
 
 			messageBuilder.append("\n")
-					.append(pluginColour, "This message will only appear once. You can in the config!");
+					.append(pluginColour, "This message will only appear once. You can disable it in the config.");
 
 			messageBuilder.append("\n")
 					.append("- Added Puzzle support for Rotations");

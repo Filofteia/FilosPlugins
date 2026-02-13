@@ -479,22 +479,17 @@ public class ScoutHelperPlugin extends Plugin
 			final ChatMessageBuilder messageBuilder = new ChatMessageBuilder();
 			Color pluginColour = new Color(64, 51, 255);
 
-			messageBuilder.append(pluginColour, "Cox Scouting QoL has been updated!");
-
-			messageBuilder.append("\n")
-					.append(pluginColour, "This message will only appear once. You can disable it in the config.");
-
-			messageBuilder.append("\n")
-					.append("- Added Puzzle support for Rotations");
-
-			messageBuilder.append("\n")
-					.append("- Added option 'Layout Modes' for Layout Exceptions");
-
-			messageBuilder.append("\n")
-					.append("- Fixed 4C1P and 4C2P overlap in Rotations");
-
-			messageBuilder.append("\n")
-					.append("- Behaviour Changes: When no 'Layout Filter' is selected, all layouts are accepted. Restore old behaviour by setting 'Layout Mode' to 'Exclusive'");
+			messageBuilder.append(pluginColour, "Cox Scouting QoL updated!")
+					.append("\n")
+					.append("- Added Puzzle support for Rotations")
+					.append("\n")
+					.append("- Added option Layout Mode for Layout Exceptions")
+					.append("\n")
+					.append("- Fixed 4C1P and 4C2P overlap in Rotations")
+					.append("\n")
+					.append("- Behaviour Changes: When no 'Layout Filter' is selected, all layouts are accepted. Restore old behaviour by setting 'Layout Mode' to 'Exclusive'")
+					.append("\n")
+					.append(pluginColour, "This message will only appear once. You can disable it in the config");
 
 			chatMessageManager.queue(QueuedMessage.builder()
 					.type(ChatMessageType.CONSOLE)

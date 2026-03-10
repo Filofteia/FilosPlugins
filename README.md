@@ -5,6 +5,8 @@ CoX Scouting QoL allows you to filter a good raid and allows removes the 'Reload
 ## Update Log:
 An update log for a plugin is kind of useless, however it might help if you've not raided in a while and want to see some of the changes.
 Because some of these are logic based I guess.
+### 0.9.1 (10/03/2026)
+- Added 'Required Rooms' field
 ### 0.9 (03/02/2026)
 - Added Puzzle Support to the 'Rotations' option
 - Added 'Exception Mode' to allow for more control over the 'Exception List'

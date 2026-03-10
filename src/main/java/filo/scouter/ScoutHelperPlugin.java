@@ -81,14 +81,17 @@ public class ScoutHelperPlugin extends Plugin
 	@Inject
 	private ChatMessageManager chatMessageManager;
 
-	private boolean raidFound = false;
-	private boolean raidSearched = false;
+	// COnfig stuff
+	private final int CURRENT_CONFIG_VERSION = 1;
+	private final int CURRENT_MESSAGE_VERSION = 2;
 
 	// Varbit
 	private boolean inRaid = false;
 	private boolean isStarted = false;
 	private boolean isChallengeMode = false;
 
+	private boolean raidFound = false;
+	private boolean raidSearched = false;
 	private RaidScouted scoutedEvent;
 
 	@Override
@@ -181,10 +184,6 @@ public class ScoutHelperPlugin extends Plugin
 		return getOrderedRooms(raid, RoomType.COMBAT);
 	}
 
-	/**
-	 * @param raid
-	 * @return String: Rotation of the Raid
-	 */
 	private String getRaidRotation(Raid raid, boolean includePuzzles)
 	{
 		StringBuilder rotation = new StringBuilder();
@@ -197,9 +196,6 @@ public class ScoutHelperPlugin extends Plugin
 		return rotation.substring(0, rotation.length() - 1);
 	}
 
-	/**
-	 * @return List<String>: Rotations from Config
-	 */
 	private List<String> getConfigRotations()
 	{
 		List<String> rotations = new ArrayList<>();
@@ -273,6 +269,7 @@ public class ScoutHelperPlugin extends Plugin
 		Set<Layout> layoutFilter = config.layoutType();;
 		Set<Overload> overloadFilter = config.overloadRooms();
 		List<String> roomFilter = Text.fromCSV(config.blockedRooms());
+		Set<String> requiredRooms = RoomEnum.validateRequiredRooms(config.requiredRooms().toLowerCase());
 
 		String raidLayoutCode = raid.getLayout().toCodeString();
 		Layout raidLayout = Layout.findLayout(combatRooms.size(), puzzleRooms.size());
@@ -283,9 +280,8 @@ public class ScoutHelperPlugin extends Plugin
 				&& (layoutFilter.isEmpty() || layoutFilter.contains(raidLayout));
 
 		boolean overloadFound =	overloadFilter.isEmpty();
-		boolean rotationFound = !config.rotationEnabled();		// Skips the check if not enabled
+		boolean rotationFound = !config.rotationEnabled();
 
-		// overloadFound means selected none so instantly know the result
 		if (config.ovlPos() == OverloadPosition.FIRST_COMBAT && !overloadFound)
 		{
 			RaidRoom firstTrueCombat = allRooms.stream()
@@ -307,14 +303,14 @@ public class ScoutHelperPlugin extends Plugin
 
 			if (!overloadFound)
 			{
-				return; // Failed condition
+				return;
 			}
 		}
 
-		// Combat Room Flags
 		for (RaidRoom room : combatRooms)
 		{
 			String roomName = room.getName();
+			requiredRooms.remove(roomName.toLowerCase());
 
 			if (roomName.equalsIgnoreCase("unknown (combat)") && config.blockedUnknownCombat())
 				return;
@@ -334,6 +330,7 @@ public class ScoutHelperPlugin extends Plugin
 		for (RaidRoom room : puzzleRooms)
 		{
 			String roomName = room.getName();
+			requiredRooms.remove(roomName.toLowerCase());
 
 			if (roomName.equalsIgnoreCase("unknown (puzzle)") && config.blockedUnknownPuzzles())
 				return;
@@ -390,6 +387,8 @@ public class ScoutHelperPlugin extends Plugin
 			}
 		}
 
+		if (!requiredRooms.isEmpty())
+			return;
 		if (!crabPuzzleFlag)
 			return;
 		if (!layoutFound)
@@ -418,12 +417,12 @@ public class ScoutHelperPlugin extends Plugin
 		final int varbitId = varbitChanged.getVarbitId();
 		final int varbitValue = varbitChanged.getValue();
 
-		if (varbitId == VarbitID.RAIDS_CHALLENGE_MODE)    // Update isChallengeMode
+		if (varbitId == VarbitID.RAIDS_CHALLENGE_MODE)
 		{
 			isChallengeMode = varbitValue == 1;
 		}
 
-		if (varbitId == VarbitID.RAIDS_CLIENT_PROGRESS) // Update isStarted
+		if (varbitId == VarbitID.RAIDS_CLIENT_PROGRESS)
 		{
 			isStarted = varbitValue == 1;
 		}
@@ -439,12 +438,14 @@ public class ScoutHelperPlugin extends Plugin
 	{
 		if (!e.getGroup().equalsIgnoreCase("coxscoutingqol"))
 			return;
+		if (e.getKey().equalsIgnoreCase("lastUpdateMessageVer"))
+			return;	// caused infinite recursion during testing
 
 		if (inRaid && scoutedEvent != null)
 		{
 			raidFound = false;
 			raidSearched = false;
-			onRaidScouted(scoutedEvent); // Probably scuffed
+			onRaidScouted(scoutedEvent);
 		}
 	}
 
@@ -471,33 +472,39 @@ public class ScoutHelperPlugin extends Plugin
 
 	private void sendUpdateMessage()
 	{
-		if (config.lastUpdateMessageVer() == 0)
+		if (config.lastUpdateMessageVer() == CURRENT_MESSAGE_VERSION)
+			return;
+
+		String group = "coxscoutingqol";
+		String key_ver = "lastUpdateMessageVer";
+		Color pluginColour = new Color(64, 51, 255);
+
+		final ChatMessageBuilder messageBuilder = new ChatMessageBuilder();
+
+		messageBuilder.append(pluginColour, "Cox Scouting QoL updated!").append("\n");
+
+		if (config.lastUpdateMessageVer() < 2)
 		{
-			String group = "coxscoutingqol";
-			String key_ver = "lastUpdateMessageVer";
+			messageBuilder.append("- Added 'Required Room' filter to the config")
+					.append("\n");
+		}
 
-			final ChatMessageBuilder messageBuilder = new ChatMessageBuilder();
-			Color pluginColour = new Color(64, 51, 255);
-
-			messageBuilder.append(pluginColour, "Cox Scouting QoL updated!")
-					.append("\n")
-					.append("- Added Puzzle support for Rotations")
-					.append("\n")
-					.append("- Added option Layout Mode for Layout Exceptions")
-					.append("\n")
-					.append("- Fixed 4C1P and 4C2P overlap in Rotations")
+		if (config.lastUpdateMessageVer() < 1)
+		{
+			messageBuilder.append("- Added Puzzle support for Rotations")
 					.append("\n")
 					.append("- Behaviour Changes: When no 'Layout Filter' is selected, all layouts are accepted. Restore old behaviour by setting 'Layout Mode' to 'Exclusive'")
-					.append("\n")
-					.append(pluginColour, "This message will only appear once. You can disable it in the config");
-
-			chatMessageManager.queue(QueuedMessage.builder()
-					.type(ChatMessageType.CONSOLE)
-					.runeLiteFormattedMessage(messageBuilder.build())
-					.build());
-
-			configManager.setConfiguration(group, key_ver, 1);
+					.append("\n");
 		}
+
+		messageBuilder.append(pluginColour, "This message will only appear once. You can disable it in the config");
+
+		chatMessageManager.queue(QueuedMessage.builder()
+				.type(ChatMessageType.CONSOLE)
+				.runeLiteFormattedMessage(messageBuilder.build())
+				.build());
+
+		configManager.setConfiguration(group, key_ver, CURRENT_MESSAGE_VERSION);
 	}
 
 	@Provides

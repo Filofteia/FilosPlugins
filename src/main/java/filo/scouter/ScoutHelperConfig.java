@@ -140,11 +140,23 @@ public interface ScoutHelperConfig extends Config
 	}
 
 	@ConfigItem(
+			keyName = "requiredRooms",
+			name = "Required Rooms",
+			description = "Enter the name of rooms you require<br><br>Example:<br>tightrope,crabs",
+			section = raidSection,
+			position = 0
+	)
+	default String requiredRooms()
+	{
+		return "";
+	}
+
+	@ConfigItem(
 		keyName = "blockedRooms",
 		name = "Blocked Rooms",
 		description = "Enter the name of rooms you want to filter out<br><br>Example:<br>ice demon,vanguards,muttadiles",
 		section = raidSection,
-		position = 0
+		position = 1
 	)
 	default String blockedRooms()
 	{
@@ -156,7 +168,7 @@ public interface ScoutHelperConfig extends Config
 		name = "Block Unknown Combat",
 		description = "Block unknown combat rooms",
 		section = raidSection,
-		position = 1
+		position = 2
 	)
 	default boolean blockedUnknownCombat()
 	{
@@ -168,7 +180,7 @@ public interface ScoutHelperConfig extends Config
 		name = "Block Unknown Puzzles",
 		description = "Block unknown puzzle rooms",
 		section = raidSection,
-		position = 2
+		position = 3
 	)
 	default boolean blockedUnknownPuzzles()
 	{
@@ -180,7 +192,7 @@ public interface ScoutHelperConfig extends Config
 		name = "Preferred Crabs",
 		description = "Choose your preferred crab type:<br><br>Any: any crab rotation is good<br>Rare: only Rare or Good crabs<br>Good: Good crabs only",
 		section = raidSection,
-		position = 3
+		position = 4
 	)
 	default Crabs preferredCrabs()
 	{

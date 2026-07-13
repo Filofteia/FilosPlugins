@@ -40,6 +40,9 @@ public class FLGroupManager
     private boolean configLoaded = false;
     private boolean isExpanded;	// Ungrouped
 
+    private final String CONFIG_KEY = "filo.friendtab";
+    private final String CONFIG_VALUE = "savedata";
+
     public void setPlayerGroup(String playerName, String targetGroup)
     {
         if (!groupNames.contains(targetGroup))
@@ -74,7 +77,7 @@ public class FLGroupManager
         if (!configLoaded)
             return;
 
-        configManager.setRSProfileConfiguration("filo.friendtab", "savedata", generateSaveJson());
+        configManager.setRSProfileConfiguration(CONFIG_KEY, CONFIG_VALUE, generateSaveJson());
     }
 
     public String generateSaveJson()
@@ -85,7 +88,7 @@ public class FLGroupManager
 
     public void resetConfig()
     {
-        configManager.setRSProfileConfiguration("filo.friendtab", "savedata", "");
+        configManager.setRSProfileConfiguration(CONFIG_KEY, CONFIG_VALUE, "");
         configLoaded = false;
         loadConfig();
     }
@@ -100,7 +103,7 @@ public class FLGroupManager
 
         configLoaded = true;
 
-        String saveJson = configManager.getRSProfileConfiguration("filo.friendtab", "savedata");
+        String saveJson = configManager.getRSProfileConfiguration(CONFIG_KEY, CONFIG_VALUE);
         importSave(saveJson);
     }
 

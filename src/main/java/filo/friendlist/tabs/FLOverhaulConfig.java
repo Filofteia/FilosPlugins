@@ -42,7 +42,7 @@ public interface FLOverhaulConfig extends Config
 	)
 	default RemoveType removeFriendType()
 	{
-		return RemoveType.CONSUME;
+		return RemoveType.DEFAULT;
 	}
 
 	@ConfigItem(

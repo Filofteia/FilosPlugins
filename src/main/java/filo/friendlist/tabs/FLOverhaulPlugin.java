@@ -190,7 +190,7 @@ public class FLOverhaulPlugin extends Plugin
 				&& menuOption.equalsIgnoreCase("delete")
 				&& groupManager.playerHasGroup(formattedName))
 		{
-			sendChatMessage("Friend Tabs has prevented you from deleting " + formattedName + ", you can disable this in the config.");
+			sendChatMessage("Friend Tabs has prevented you from deleting " + formattedName + ". You can disable this in the config.");
 			e.consume();
 		}
 	}
@@ -454,7 +454,7 @@ public class FLOverhaulPlugin extends Plugin
 			return;
 		}
 
-		groupButton = friendUniverse.createChild(-1, WidgetType.GRAPHIC);
+		groupButton = friendUniverse.createChild(-1, WidgetType.GRAPHIC);	// The parent is not null because I checked in universeHasButton
 
         int GROUP_BUTTON_SIZE = 17;
         groupButton.setSize(GROUP_BUTTON_SIZE, GROUP_BUTTON_SIZE);
@@ -467,9 +467,6 @@ public class FLOverhaulPlugin extends Plugin
 		groupButton.setSpriteId(GROUP_SPRITE);
 
 		groupButton.setAction(0, "Create");
-		// Shouldn't be needed, but might want in the future
-//		groupButton.setAction(1, "Export Groups");
-//		groupButton.setAction(2, "Import Groups");
 		groupButton.setAction(3, "Clear");
 		groupButton.setHasListener(true);
 		groupButton.setOnOpListener((JavaScriptCallback) this::promptCreateGroup);
@@ -746,41 +743,6 @@ public class FLOverhaulPlugin extends Plugin
 							groupManager.createGroup(formattedInput);
 							refreshFriendPanel();
 						})
-						.build();
-				break;
-			case 2:
-				panelManager.openTextMenuInput("Would you like to export your friend groups?<br>This will overwrite your clipboard!")
-						.option("Yes", () -> {
-							Toolkit.getDefaultToolkit()
-									.getSystemClipboard()
-									.setContents(new StringSelection(groupManager.generateSaveJson()), null);
-						})
-						.option("No", Runnables.doNothing())
-						.build();
-				break;
-			case 3:
-				panelManager.openTextMenuInput("Are you sure you would like to import from clipboard?<br>This will remove all current groups, and they CANNOT be recovered.")
-						.option("Yes", () -> {
-                            String clipboardJson = null;
-                            try
-							{
-                                clipboardJson = Toolkit.getDefaultToolkit().getSystemClipboard().getData(DataFlavor.stringFlavor).toString();
-                            }
-							catch (UnsupportedFlavorException e)
-							{
-                                throw new RuntimeException(e);
-                            }
-							catch (IOException e)
-							{
-								log.debug(e.getMessage());
-							}
-
-							if (clipboardJson == null)
-								return; // This would nuke data
-
-							groupManager.importSave(clipboardJson);
-						})
-						.option("No", Runnables.doNothing())
 						.build();
 				break;
 			case 4:

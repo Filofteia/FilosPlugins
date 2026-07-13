@@ -1,13 +1,13 @@
-package com.example;
+package filo.friendlist.tabs;
 
 import net.runelite.client.RuneLite;
 import net.runelite.client.externalplugins.ExternalPluginManager;
 
-public class ExamplePluginTest
+public class FLOverhaulPluginTest
 {
 	public static void main(String[] args) throws Exception
 	{
-		ExternalPluginManager.loadBuiltin(ExamplePlugin.class);
+		ExternalPluginManager.loadBuiltin(FLOverhaulPlugin.class);
 		RuneLite.main(args);
 	}
 }

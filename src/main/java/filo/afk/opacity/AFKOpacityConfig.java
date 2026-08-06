@@ -91,7 +91,7 @@ public interface AFKOpacityConfig extends Config
 		return "";
 	}
 
-	@Range(min = 0, max = 100)
+	@Range(min = 1, max = 100)
 	@ConfigItem(
 			keyName = "afkOpacity",
 			name = "Afk Opacity",
@@ -104,7 +104,7 @@ public interface AFKOpacityConfig extends Config
 		return 20;
 	}
 
-	@Range(min = 0, max = 100)
+	@Range(min = 1, max = 100)
 	@ConfigItem(
 			keyName = "afkTabbedOpacity",
 			name = "Tabbed Out Opacity",

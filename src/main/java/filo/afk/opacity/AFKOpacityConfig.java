@@ -30,21 +30,21 @@ public interface AFKOpacityConfig extends Config
 
 	@ConfigSection(
 			name = "Restore Settings",
-			description = "The opacity settings for the AFK plugin",
+			description = "Change what can restore the client",
 			position = 2
 	)
 	String restoreSettings = "Restore Settings";
 
 	@ConfigSection(
 			name = "Input Settings",
-			description = "The opacity settings for the AFK plugin",
+			description = "Change how AFK mode changes inputs",
 			position = 3
 	)
 	String inputSettings = "Input Settings";
 
 	@ConfigSection(
 			name = "Debug",
-			description = "The opacity settings for the AFK plugin",
+			description = "Simple debug settings",
 			position = 4,
 			closedByDefault = true
 	)
@@ -108,7 +108,7 @@ public interface AFKOpacityConfig extends Config
 	@ConfigItem(
 			keyName = "afkTabbedOpacity",
 			name = "Tabbed Out Opacity",
-			description = "Client opacity while AFK mode is active and the game is no focused.",
+			description = "Client opacity while AFK mode is active and the game is not focused.",
 			section = generalSettings,
 			position = 2
 	)

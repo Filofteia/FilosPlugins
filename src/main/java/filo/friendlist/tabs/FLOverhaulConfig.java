@@ -1,6 +1,7 @@
 package filo.friendlist.tabs;
 
 import filo.friendlist.tabs.config.FontConfig;
+import filo.friendlist.tabs.config.GroupCount;
 import filo.friendlist.tabs.config.RemoveType;
 import filo.friendlist.tabs.config.TextAlignmentConfig;
 import net.runelite.client.config.Config;
@@ -46,10 +47,22 @@ public interface FLOverhaulConfig extends Config
 	}
 
 	@ConfigItem(
+			keyName = "recolourFriends",
+			name = "Recolour Friends",
+			description = "Recolours you friends to samme colour as the world they are on",
+			position = 1,
+			section = generalSettings
+	)
+	default boolean recolourFriends()
+	{
+		return false;
+	}
+
+	@ConfigItem(
 			keyName = "ungroupedStartExpanded",
 			name = "Default Group Expanded",
 			description = "Change whether 'Ungrouped' starts expanded or collapsed",
-			position = 1,
+			position = 2,
 			section = generalSettings
 	)
 	default boolean ungroupedStartExpanded()
@@ -144,10 +157,23 @@ public interface FLOverhaulConfig extends Config
 	}
 
 	@ConfigItem(
+			keyName = "drawCount",
+			name = "Draw Group Count",
+			description = "Appends the group count to the headers name",
+			position = 4,
+			section = visualSettings
+			//warning = "This will make empty groups appear invisible so you cannot delete them"
+	)
+	default GroupCount drawCount()
+	{
+		return GroupCount.ONLINE;
+	}
+
+	@ConfigItem(
 			keyName = "drawBackdrop",
 			name = "Draw Backdrop",
 			description = "Toggle the visibility of the backdrop",
-			position = 4,
+			position = 5,
 			section = visualSettings
 	)
 	default boolean drawBackdrop()
@@ -159,7 +185,7 @@ public interface FLOverhaulConfig extends Config
 			keyName = "drawBackdropBox",
 			name = "Draw Group Box",
 			description = "Toggle the visibility of the backdrop box",
-			position = 5,
+			position = 6,
 			section = visualSettings
 	)
 	default boolean drawBackdropBox()
@@ -171,22 +197,10 @@ public interface FLOverhaulConfig extends Config
 			keyName = "drawShadow",
 			name = "Draw Shadows",
 			description = "Toggle the visibility of the text shadow on the tab header",
-			position = 6,
-			section = visualSettings
-	)
-	default boolean drawShadow()
-	{
-		return true;
-	}
-
-	@ConfigItem(
-			keyName = "drawCount",
-			name = "Draw Group Count",
-			description = "Appends the group count to the headers name",
 			position = 7,
 			section = visualSettings
 	)
-	default boolean drawCount()
+	default boolean drawShadow()
 	{
 		return true;
 	}
@@ -204,10 +218,23 @@ public interface FLOverhaulConfig extends Config
 	}
 
 	@ConfigItem(
+			keyName = "hideOfflineGroups",
+			name = "Hide Offline Groups",
+			description = "Hide offline groups",
+			position = 9,
+			section = visualSettings,
+			warning = "This will make empty groups appear invisible so you cannot delete them"
+	)
+	default boolean hideOfflineGroups()
+	{
+		return false;
+	}
+
+	@ConfigItem(
 			keyName = "groupSpacing",
 			name = "Name Offset",
 			description = "The inset of friends names and the world number",
-			position = 9,
+			position = 10,
 			section = visualSettings
 	)
 	default int groupSpacing()

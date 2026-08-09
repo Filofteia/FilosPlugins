@@ -33,6 +33,7 @@ import com.google.gson.Gson;
 import com.google.inject.Provides;
 import javax.inject.Inject;
 
+import filo.friendlist.tabs.config.GroupCount;
 import filo.friendlist.tabs.config.RemoveType;
 import filo.friendlist.tabs.data.FriendTab;
 import lombok.extern.slf4j.Slf4j;
@@ -83,9 +84,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -235,7 +238,7 @@ public class FLOverhaulPlugin extends Plugin
 	@Subscribe
 	public void onMenuEntryAdded(MenuEntryAdded entryAdded)
 	{
-		if (!groupManager.hasGroups())
+		if (!groupManager.hasAnyGroups())
 			return;
 
 		int groupId = WidgetUtil.componentToInterface(entryAdded.getActionParam1());
@@ -244,14 +247,12 @@ public class FLOverhaulPlugin extends Plugin
 			if (Strings.isNullOrEmpty(entryAdded.getTarget()))
 				return;
 
-			boolean inGroup = false;
-			List<String> currentGroupNames = new ArrayList<>(groupManager.getGroupNames());
+			List<String> availableGroups = new ArrayList<>(groupManager.getGroupNames());
 			String playerName = formatName(entryAdded.getTarget());
-			String playerGroup = groupManager.getPlayerGroup(playerName);
-			if (playerGroup != null)
+			Set<String> playerGroups = groupManager.getPlayerGroups(playerName);
+			if (playerGroups != null)
 			{
-				currentGroupNames.remove(playerGroup);
-				inGroup = true;
+				availableGroups.removeAll(playerGroups);
 			}
 
 			MenuEntry sectionMenu = client.getMenu().createMenuEntry(-1)
@@ -260,30 +261,32 @@ public class FLOverhaulPlugin extends Plugin
 					.setTarget(entryAdded.getTarget());
 
 			Menu sectionSubMenu = sectionMenu.createSubMenu();
-			if (inGroup)
+			if (playerGroups != null && !playerGroups.isEmpty())
 			{
-				Color groupColour = groupManager.getTextColour(playerGroup);
-				String groupNameColour = ColorUtil.wrapWithColorTag(playerGroup, groupColour);
+				for (String playerGroup : playerGroups) {
+					Color groupColour = groupManager.getTextColour(playerGroup);
+					String groupNameColour = ColorUtil.wrapWithColorTag(playerGroup, groupColour);
 
-				sectionSubMenu.createMenuEntry(-1)
-						.setOption(ColorUtil.wrapWithColorTag("Remove from", Color.RED))
-						.setType(MenuAction.RUNELITE)
-						.onClick((c) -> {
-							groupManager.removePlayerFromGroup(playerName);
-							refreshFriendPanel();
-						})
-						.setTarget(config.colourMenuEntries() ? groupNameColour : playerGroup);
+					sectionSubMenu.createMenuEntry(-1)
+							.setOption(ColorUtil.wrapWithColorTag("Remove from", Color.RED))
+							.setType(MenuAction.RUNELITE)
+							.onClick((c) -> {
+								groupManager.removePlayerFromGroup(playerName, playerGroup);
+								refreshFriendPanel();
+							})
+							.setTarget(config.colourMenuEntries() ? groupNameColour : playerGroup);
+				}
 			}
 
-			for (String groupName : currentGroupNames)
+			for (String groupName : availableGroups)
 			{
 				Color groupColour = groupManager.getTextColour(groupName);
 				String groupNameColour = ColorUtil.wrapWithColorTag(groupName, groupColour);
 
 				sectionSubMenu.createMenuEntry(0)
-						.setOption(ColorUtil.wrapWithColorTag((inGroup ? "Move" : "Add") + " to", Color.GREEN))
+						.setOption(ColorUtil.wrapWithColorTag("Add to", Color.GREEN))
 						.onClick((c) -> {
-							groupManager.setPlayerGroup(playerName, groupName);
+							groupManager.addPlayerToGroup(playerName, groupName);
 							refreshFriendPanel();
 						})
 						.setTarget(config.colourMenuEntries() ? groupNameColour : groupName)
@@ -307,6 +310,9 @@ public class FLOverhaulPlugin extends Plugin
 		Nameable nameable = e.getNameable();
 		if (nameable instanceof Friend)
 		{
+			if (nameable.getPrevName() == null || nameable.getPrevName().isBlank())
+				return;
+
 			String sourceName = formatName(nameable.getPrevName());
 			String targetName = formatName(nameable.getName());
 
@@ -315,6 +321,24 @@ public class FLOverhaulPlugin extends Plugin
 		}
 
 		refreshFriendPanel();
+	}
+
+	private void migrateNameChanges()
+	{
+		Friend[] friends = client.getFriendContainer().getMembers();
+		for (Friend friend : friends)
+		{
+			if (friend.getPrevName() == null || friend.getPrevName().isBlank())	// Happens on some people for no reason
+				continue;
+
+			String sourceName = formatName(friend.getPrevName());
+			String targetName = formatName(friend.getName());
+
+			if (groupManager.playerHasGroup(sourceName))
+				groupManager.migratePlayer(sourceName, targetName);
+		}
+
+		clientThread.invokeAtTickEnd(this::refreshFriendPanel);
 	}
 
 	@Subscribe
@@ -344,7 +368,10 @@ public class FLOverhaulPlugin extends Plugin
 			nameToIndex.put(playerName, i);
 		}
 
+		Set<String> renderedPlayers = new HashSet<>();
+		List<String> ungroupedFriends = new ArrayList<>();
 		boolean isExpanded;
+
 		int widgetScrollY = 0;
 		int fontSpacing = getFontSpacing();
 		int headerOffset = getHeaderSpacing();
@@ -362,6 +389,22 @@ public class FLOverhaulPlugin extends Plugin
 					.sorted(Comparator.comparingInt(nameToIndex::get))
 					.collect(Collectors.toList());
 
+			if (config.hideOfflineGroups() && getGroupOnline(groupName) == 0)
+			{
+				widgetScrollY -= headerOffset;
+				for (String player : sortedPlayers)
+				{
+					if (getPlayerOnlineGroups(player) > 0)
+						continue;
+					if (ungroupedFriends.contains(player))
+						continue;
+
+					ungroupedFriends.add(player);
+				}
+
+				continue;
+			}
+
 			isExpanded = groupManager.isExpanded(groupName);
 			createFolder(friendContainer, groupName, widgetScrollY, sortedPlayers.size(), isExpanded);
 			widgetScrollY += fontSpacing;
@@ -371,14 +414,16 @@ public class FLOverhaulPlugin extends Plugin
 				if (!nameToIndex.containsKey(player))
 					continue;
 
-				widgetScrollY += layoutFriendWidget(isExpanded, widgetScrollY, player);
+				if (renderedPlayers.add(player))
+					widgetScrollY += layoutFriendWidget(isExpanded, widgetScrollY, player);
+				else
+					widgetScrollY += dupeFriendWidget(friendContainer, widgetScrollY, player, isExpanded);
 			}
 		}
 
-		List<String> ungroupedFriends = new ArrayList<>();
 		for (String name : nameToIndex.keySet())
 		{
-			if (!groupManager.playerHasGroup(name))
+			if (!groupManager.playerHasGroup(name))	// Cannot dupe previous because they all have groups
 				ungroupedFriends.add(name);
 		}
 
@@ -392,8 +437,14 @@ public class FLOverhaulPlugin extends Plugin
 
 			widgetScrollY += fontSpacing;
 
+			ungroupedFriends.sort(Comparator.comparingInt(nameToIndex::get));
 			for (String player : ungroupedFriends)
-				widgetScrollY += layoutFriendWidget(isExpanded, widgetScrollY, player);
+			{
+				if (renderedPlayers.add(player))
+					widgetScrollY += layoutFriendWidget(isExpanded, widgetScrollY, player);
+				else
+					widgetScrollY += dupeFriendWidget(friendContainer, widgetScrollY, player, isExpanded);
+			}
 		}
 
 		friendContainer.revalidate();
@@ -417,6 +468,15 @@ public class FLOverhaulPlugin extends Plugin
 		Widget icon = friendListWidgets[index+1];
 		Widget world = friendListWidgets[index+2];
 
+		if (config.recolourFriends())
+			name.setTextColor(world.getTextColor());
+
+		name.setForcedPosition(config.groupSpacing(), yOffset);
+		icon.setForcedPosition(icon.getOriginalX() + config.groupSpacing(), yOffset);
+		world	// setForcedPosition worked for the yOffset, but not for the groupSpacing from originalX
+				.setOriginalX(world.getOriginalX() - config.groupSpacing())
+				.setOriginalY(yOffset);
+
 		if (!isExpanded)
 		{
 			name.setHidden(true);
@@ -425,12 +485,53 @@ public class FLOverhaulPlugin extends Plugin
 			return 0;
 		}
 
-		name.setForcedPosition(config.groupSpacing(), yOffset);
-		icon.setForcedPosition(icon.getOriginalX() + config.groupSpacing(), yOffset);
-		world	// setForcedPosition worked for the yOffset, but not for the groupSpacing from originalX
-				.setOriginalX(world.getOriginalX() - config.groupSpacing())
-				.setOriginalY(yOffset);
+		return 15;
+	}
 
+	private int dupeFriendWidget(Widget parent, int yOffset, String playerName, boolean isExpanded)
+	{
+		int index = nameToIndex.get(playerName);
+		if (index == -1 || !isExpanded)
+			return 0;
+
+		Friend friend = getFriend(playerName);
+		if (friend == null)
+			return 0;
+
+		for (int i = 0; i <= 2; i++)	// 0 is name, 1 is icon, 2 is world
+		{
+			Widget sourceWidget = friendListWidgets[index+i];
+			Widget widget = parent.createChild(-1, sourceWidget.getType());
+
+			widget.setName(sourceWidget.getName())
+					.setFontId(sourceWidget.getFontId())
+					.setText(sourceWidget.getText())
+					.setTextColor(sourceWidget.getTextColor())
+					.setTextShadowed(sourceWidget.getTextShadowed())
+					.setXTextAlignment(sourceWidget.getXTextAlignment());
+
+			widget.setSize(sourceWidget.getWidth(), sourceWidget.getHeight())
+					.setOriginalX(widget.getType() == WidgetType.GRAPHIC ? sourceWidget.getRelativeX() : sourceWidget.getOriginalX() + sourceWidget.getRelativeX())
+					.setOriginalY(yOffset);
+
+			widget.setSpriteId(sourceWidget.getSpriteId());
+			widget.setHidden(widget.getType() == WidgetType.GRAPHIC && (friend.getPrevName() == null || friend.getPrevName().isEmpty()));
+
+			String[] sourceActions = sourceWidget.getActions();
+			Object[] sourceListeners = sourceWidget.getOnOpListener();
+			if (sourceActions != null) {
+				widget.setHasListener(sourceWidget.hasListener());
+
+				for (int j = 0; j < sourceActions.length; j++) {
+					widget.setAction(j, sourceActions[j]);
+					widget.setOnOpListener(j, sourceListeners[j]);
+				}
+			}
+
+			widget.revalidate();
+		}
+
+		parent.revalidate();
 		return 15;
 	}
 
@@ -467,7 +568,10 @@ public class FLOverhaulPlugin extends Plugin
 		groupButton.setSpriteId(GROUP_SPRITE);
 
 		groupButton.setAction(0, "Create");
+		groupButton.setAction(1, "Export Groups");
+		groupButton.setAction(2, "Import Groups");
 		groupButton.setAction(3, "Clear");
+
 		groupButton.setHasListener(true);
 		groupButton.setOnOpListener((JavaScriptCallback) this::promptCreateGroup);
 
@@ -511,8 +615,21 @@ public class FLOverhaulPlugin extends Plugin
 		String formattedName = ColorUtil.wrapWithColorTag(name, textColor);
 		String formattedText = formattedName;
 
-		if (config.drawCount())
-			formattedText = formattedText + (" (") + (groupSize) + ")";
+		int groupCount = 0;
+		switch (config.drawCount())
+		{
+			case TOTAL:
+				groupCount = groupSize;
+				break;
+			case ONLINE:
+				groupCount = getGroupOnline(name);
+				break;
+			case DISABLED:
+				groupCount = -1;
+				break;
+		}
+		if (config.drawCount() != GroupCount.DISABLED)
+			formattedText = formattedText + (" (") + groupCount + ")";
 
 		int textAlignment = config.textAlign().getAlignmentId();
 		boolean isExpanded = groupManager.isExpanded(name);
@@ -702,27 +819,10 @@ public class FLOverhaulPlugin extends Plugin
 					// Not using the groupManager::hasGroup because you might want to rename uppercase / lowercase
 					if (cleanInput.isBlank() || groupManager.getGroupNames().contains(cleanInput) || cleanInput.equalsIgnoreCase("ungrouped"))
 					{
-						log.debug("Input is blank, or already taken: {}", cleanInput);
 						return;
 					}
 
 					groupManager.renameGroup(groupName, cleanInput);
-					refreshFriendPanel();
-				})
-				.build();
-	}
-
-	private void promptSetIconID(String groupName)	// They have an offset, I'd like to look into fixing thaat first
-	{
-		panelManager.openTextInput("What icon would you like for '" + groupName + "'?")
-				.value("0")
-				.onDone((input) -> {
-					int iconId = Integer.parseInt(input);
-					if (iconId == -1)
-						return;
-
-					groupManager.getTab(groupName).setIconId(iconId);
-
 					refreshFriendPanel();
 				})
 				.build();
@@ -743,6 +843,46 @@ public class FLOverhaulPlugin extends Plugin
 							groupManager.createGroup(formattedInput);
 							refreshFriendPanel();
 						})
+						.build();
+				break;
+			case 2:
+				panelManager.openTextMenuInput("Would you like to export your friend groups?<br>This will overwrite your clipboard!")
+						.option("Yes", () -> {
+							Toolkit.getDefaultToolkit()
+									.getSystemClipboard()
+									.setContents(new StringSelection(groupManager.generateSaveJson()), null);
+						})
+						.option("No", Runnables.doNothing())
+						.build();
+				break;
+			case 3:
+				panelManager.openTextMenuInput("Are you sure you would like to import from clipboard?<br>This will remove all current groups, and they CANNOT be recovered.")
+						.option("Yes", () -> {
+							String clipboardJson = null;
+							try
+							{
+								clipboardJson = Toolkit.getDefaultToolkit().getSystemClipboard().getData(DataFlavor.stringFlavor).toString();
+							}
+							catch (UnsupportedFlavorException e)
+							{
+								throw new RuntimeException(e);
+							}
+							catch (IOException e)
+							{
+								log.debug(e.getMessage());
+							}
+
+							if (clipboardJson == null)
+								return; // This would nuke data
+
+							log.info("Importing Friend Tab via Clipboard: {}", clipboardJson);
+
+							if (groupManager.importSave(clipboardJson)) {
+								groupManager.saveConfig();
+								migrateNameChanges();
+							}
+						})
+						.option("No", Runnables.doNothing())
 						.build();
 				break;
 			case 4:
@@ -814,6 +954,51 @@ public class FLOverhaulPlugin extends Plugin
 				.type(ChatMessageType.CONSOLE)
 				.runeLiteFormattedMessage(rlMesage)
 				.build());
+	}
+
+	private Friend getFriend(String friendName)
+	{
+		// FriendContainer has findByName, but that has the Jagex space and stuff
+		return Arrays.stream(client.getFriendContainer().getMembers())
+				.filter(friend -> formatName(friend.getName()).equals(friendName))
+				.findFirst()
+				.orElse(null);
+	}
+
+	private boolean isPlayerOnline(String friendName)
+	{
+		Friend friend = getFriend(friendName);
+		if (friend == null)
+			return false;
+
+		return friend.getWorld() != 0;
+	}
+
+	private int getPlayerOnlineGroups(String player)
+	{
+		int onlineGroups = 0;
+
+		for (String groupName : groupManager.getPlayerGroups(player))
+		{
+			if (getGroupOnline(groupName) > 0)
+				onlineGroups++;
+		}
+
+		return onlineGroups;
+	}
+
+	private int getGroupOnline(String groupName)
+	{
+		int onlineCount = 0;
+
+		List<String> groupPlayers = groupManager.getPlayers(groupName);
+		for (String player : groupPlayers)
+		{
+			if (isPlayerOnline(player))
+				onlineCount++;
+		}
+
+		return onlineCount;
 	}
 
 	@Provides

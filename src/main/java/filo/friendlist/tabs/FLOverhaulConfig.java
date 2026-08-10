@@ -159,10 +159,9 @@ public interface FLOverhaulConfig extends Config
 	@ConfigItem(
 			keyName = "drawCount",
 			name = "Draw Group Count",
-			description = "Appends the group count to the headers name",
+			description = "Appends the group count of your choice to the headers name",
 			position = 4,
 			section = visualSettings
-			//warning = "This will make empty groups appear invisible so you cannot delete them"
 	)
 	default GroupCount drawCount()
 	{

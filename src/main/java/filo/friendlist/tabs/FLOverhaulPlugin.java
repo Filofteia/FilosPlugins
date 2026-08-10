@@ -846,7 +846,7 @@ public class FLOverhaulPlugin extends Plugin
 						.build();
 				break;
 			case 2:
-				panelManager.openTextMenuInput("Would you like to export your friend groups?<br>This will overwrite your clipboard!")
+				panelManager.openTextMenuInput("Would you like to export your friend groups?<br>This will overwrite your clipboard")
 						.option("Yes", () -> {
 							Toolkit.getDefaultToolkit()
 									.getSystemClipboard()
@@ -856,7 +856,7 @@ public class FLOverhaulPlugin extends Plugin
 						.build();
 				break;
 			case 3:
-				panelManager.openTextMenuInput("Are you sure you would like to import from clipboard?<br>This will remove all current groups, and they CANNOT be recovered.")
+				panelManager.openTextMenuInput("Are you sure you would like to import from clipboard?<br>This will remove all current groups and they CANNOT be recovered.")
 						.option("Yes", () -> {
 							String clipboardJson = null;
 							try

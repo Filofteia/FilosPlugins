@@ -27,7 +27,7 @@ public class PresetPanel extends JPanel
 {
     private CMChecklistPlugin plugin;
     private SaveManager saveManager;
-    private Gson gson = new Gson();
+    private Gson gson;
 
     private IconTextField searchBar = new IconTextField();
     private JPanel presetListPanel = new JPanel();
@@ -50,6 +50,7 @@ public class PresetPanel extends JPanel
     public PresetPanel(CMChecklistPlugin plugin, SaveManager saveManager) {
         this.plugin = plugin;
         this.saveManager = saveManager;
+        this.gson = plugin.getGson();
 
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setAlignmentX(Component.LEFT_ALIGNMENT);

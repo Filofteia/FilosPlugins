@@ -182,7 +182,7 @@ public class PresetEntry extends JPanel
 
     private void copySetupToClipboard(RaidSetup setup)
     {
-        Gson gson = new Gson();
+        Gson gson = plugin.getGson();
         String json = gson.toJson(setup);
         Toolkit.getDefaultToolkit()
                 .getSystemClipboard()

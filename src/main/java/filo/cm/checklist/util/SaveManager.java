@@ -37,7 +37,7 @@ public class SaveManager {
     private CMChecklistPlugin plugin;
     private ConfigManager configManager;
     private ClientThread clientThread;
-    private Gson gson = new Gson();
+    private Gson gson;
 
     private List<UUID> uuidKeyList = new ArrayList<>();
     @Getter private List<RaidSetup> raidSetupList = new ArrayList<>();
@@ -48,6 +48,7 @@ public class SaveManager {
         this.plugin = plugin;
         this.client = client;
         this.clientThread = clientThread;
+        this.gson = plugin.getGson();
 
         load();
     }

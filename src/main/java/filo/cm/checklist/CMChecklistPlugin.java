@@ -27,6 +27,7 @@
 
 package filo.cm.checklist;
 
+import com.google.gson.Gson;
 import com.google.inject.Provides;
 import filo.cm.checklist.data.BrewContext;
 import filo.cm.checklist.data.InstanceTemplate;
@@ -92,6 +93,7 @@ public class CMChecklistPlugin extends Plugin {
 	@Inject	private ItemManager itemManager;
 	@Inject	private ClientToolbar toolbar;
 	@Inject	private ChatboxItemSearch chatboxItemSearch;
+	@Getter @Inject private Gson gson;
 
 	private NavigationButton panelButton;
 	private CMChecklistPanel pluginPanel;

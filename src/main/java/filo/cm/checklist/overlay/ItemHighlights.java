@@ -14,7 +14,7 @@ import javax.inject.Inject;
 
 import filo.cm.checklist.util.PotionUtil;
 import lombok.extern.slf4j.Slf4j;
-import net.runelite.api.widgets.InterfaceID;
+import net.runelite.api.gameval.InterfaceID;
 import net.runelite.api.widgets.WidgetItem;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.ui.overlay.WidgetItemOverlay;
@@ -34,7 +34,11 @@ public class ItemHighlights extends WidgetItemOverlay
 		this.plugin = plugin;
 		this.config = config;
 		this.itemManager = itemManager;
-		showOnInterfaces(InterfaceID.CHAMBERS_OF_XERIC_STORAGE_UNIT_PRIVATE, InterfaceID.CHAMBERS_OF_XERIC_INVENTORY, InterfaceID.INVENTORY);
+		showOnInterfaces(
+				InterfaceID.RAIDS_STORAGE_PRIVATE,
+				InterfaceID.RAIDS_STORAGE_SIDE,
+				InterfaceID.INVENTORY
+		);
 	}
 
 	private BrewContext brewContext;
@@ -81,7 +85,7 @@ public class ItemHighlights extends WidgetItemOverlay
 		int containerGroupId = widgetItem.getWidget().getId() >> 16;
 		if (mismatchedItems.contains(itemIndex) && config.highlightMismatched())
 		{
-			if (containerGroupId != InterfaceID.CHAMBERS_OF_XERIC_STORAGE_UNIT_PRIVATE)
+			if (containerGroupId != InterfaceID.RAIDS_STORAGE_PRIVATE)
 			{
 				graphics.setColor(config.highlightMismatchedColour());
 				graphics.drawRect(widgetBounds.x, widgetBounds.y, widgetBounds.width, widgetBounds.height);
@@ -90,7 +94,7 @@ public class ItemHighlights extends WidgetItemOverlay
 
 		if (itemIndexes.contains(itemIndex) && (!config.zigzag() || !config.zigzagInventory()) && config.highlightInventory())
 		{
-			if (containerGroupId == InterfaceID.CHAMBERS_OF_XERIC_STORAGE_UNIT_PRIVATE)
+			if (containerGroupId == InterfaceID.RAIDS_STORAGE_PRIVATE)
 				renderItemOverlay(graphics, itemId, widgetQty, config.inventoryColour(), widgetBounds, true);
 		}
 
@@ -134,14 +138,14 @@ public class ItemHighlights extends WidgetItemOverlay
 					renderItemOverlay(graphics, itemId, widgetQty, config.equipmentColour(), widgetBounds, true);
 				break;
 			case WITHDRAW:
-				if (containerGroupId != InterfaceID.CHAMBERS_OF_XERIC_STORAGE_UNIT_PRIVATE)	// No inventory
+				if (containerGroupId != InterfaceID.RAIDS_STORAGE_PRIVATE)	// No inventory
 					return;
 
 				if (config.highlightWithdraw())
 					renderItemOverlay(graphics, itemId, widgetQty, config.withdrawColour(), widgetBounds, true);
 				break;
 			case DEPOSIT:
-				if (containerGroupId == InterfaceID.CHAMBERS_OF_XERIC_STORAGE_UNIT_PRIVATE)	// No inventory
+				if (containerGroupId == InterfaceID.RAIDS_STORAGE_PRIVATE)	// Only inventory
 					return;
 
 				if (config.highlightDeposit())
@@ -155,7 +159,7 @@ public class ItemHighlights extends WidgetItemOverlay
 	{
 		if (withdrawQty > 0)
 		{
-			if (containerGroupId != InterfaceID.CHAMBERS_OF_XERIC_STORAGE_UNIT_PRIVATE)
+			if (containerGroupId != InterfaceID.RAIDS_STORAGE_PRIVATE)
 				return false;
 
 			renderItemOverlay(graphics, itemId, widgetQty, config.withdrawColour(), widgetBounds, true);

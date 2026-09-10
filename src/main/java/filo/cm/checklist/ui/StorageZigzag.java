@@ -9,10 +9,10 @@ import filo.cm.checklist.util.PotionUtil;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
-import net.runelite.api.InventoryID;
 import net.runelite.api.Item;
 import net.runelite.api.ItemContainer;
 import net.runelite.api.gameval.InterfaceID;
+import net.runelite.api.gameval.InventoryID;
 import net.runelite.api.gameval.ItemID;
 import net.runelite.api.widgets.Widget;
 import net.runelite.api.widgets.WidgetType;
@@ -143,7 +143,7 @@ public class StorageZigzag {
     // gets the index list without creating ghosts or removing from the storageItemm lists
     private List<Integer> getInventoryIndexesTest(RoomSetup setup, List<Widget> storageItems, boolean invasive)
     {
-        ItemContainer inventory = client.getItemContainer(InventoryID.INVENTORY);
+        ItemContainer inventory = client.getItemContainer(InventoryID.INV);
         if (inventory == null)
             return new ArrayList<>();
 

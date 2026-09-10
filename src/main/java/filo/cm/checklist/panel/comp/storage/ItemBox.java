@@ -10,10 +10,10 @@ import filo.cm.checklist.util.SaveManager;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
-import net.runelite.api.InventoryID;
 import net.runelite.api.Item;
 import net.runelite.api.ItemComposition;
 import net.runelite.api.ItemContainer;
+import net.runelite.api.gameval.InventoryID;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.game.chatbox.ChatboxItemSearch;
@@ -135,7 +135,7 @@ public class ItemBox extends JPanel
 	{
 		clientThread.invokeLater(() -> {
 			boolean isInventory = type == ItemBoxType.INVENTORY;
-			ItemContainer itemContainer = client.getItemContainer(isInventory ? InventoryID.INVENTORY : InventoryID.EQUIPMENT);
+			ItemContainer itemContainer = client.getItemContainer(isInventory ? InventoryID.INV : InventoryID.WORN);
 
 			if (itemContainer == null)
 			{

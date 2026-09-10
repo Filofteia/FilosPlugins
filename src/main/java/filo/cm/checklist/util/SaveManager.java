@@ -13,9 +13,9 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
-import net.runelite.api.InventoryID;
 import net.runelite.api.Item;
 import net.runelite.api.ItemContainer;
+import net.runelite.api.gameval.InventoryID;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
 import javax.swing.*;
@@ -281,7 +281,7 @@ public class SaveManager {
         if (room == null)
             return false;
 
-        ItemContainer lpEquipment = client.getItemContainer(InventoryID.EQUIPMENT);
+        ItemContainer lpEquipment = client.getItemContainer(InventoryID.WORN);
         if (lpEquipment == null)
             return false;
 
@@ -304,7 +304,7 @@ public class SaveManager {
         if (room == null)
             return false;
 
-        ItemContainer lpInventory = client.getItemContainer(net.runelite.api.gameval.InventoryID.INV);
+        ItemContainer lpInventory = client.getItemContainer(InventoryID.INV);
         if (lpInventory == null)
             return false;
 

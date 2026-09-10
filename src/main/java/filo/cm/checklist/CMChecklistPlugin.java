@@ -277,10 +277,10 @@ public class CMChecklistPlugin extends Plugin {
 		}
 
 		if (menuAction == MenuAction.CC_OP
-				&& ((menuEntry.getOption().equalsIgnoreCase("withdraw-x")
+				&& (menuEntry.getOption().equalsIgnoreCase("withdraw-x")
 				&& e.getActionParam1() >> 16 == InterfaceID.RAIDS_STORAGE_PRIVATE)
 				|| (menuEntry.getOption().equalsIgnoreCase("store-x")
-				&& e.getActionParam1() >> 16 == InterfaceID.RAIDS_SIDEPANEL)))
+				&& e.getActionParam1() >> 16 == InterfaceID.RAIDS_STORAGE_SIDE))
 		{
 			Widget itemWidget = menuEntry.getWidget();
 			if (itemWidget == null)
@@ -399,7 +399,8 @@ public class CMChecklistPlugin extends Plugin {
 		{
 			if (e.getKey().equalsIgnoreCase("zigzag")
 			|| e.getKey().equalsIgnoreCase("zigzagEquipment")
-			|| e.getKey().equalsIgnoreCase("zigzagInventory"))
+			|| e.getKey().equalsIgnoreCase("zigzagInventory")
+			|| e.getKey().equalsIgnoreCase("compactZigzag"))
 				refreshPrivateStorage(true);
 		}
 	}

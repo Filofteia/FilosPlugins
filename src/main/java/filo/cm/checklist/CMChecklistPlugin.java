@@ -132,6 +132,7 @@ public class CMChecklistPlugin extends Plugin {
 				.tooltip("CM Preset Panel")
 				.panel(pluginPanel)
 				.icon(icon)
+				.priority(10)
 				.build();
 
 		toolbar.addNavigation(panelButton);

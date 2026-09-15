@@ -5,10 +5,8 @@ import lombok.Getter;
 @Getter
 public enum CMLayout
 {
-	/**
-	 * 0123
-	 * 4567
-	 */
+	//0123
+	//4567
 	ENTRY_F3(6, 5, 3, false, "Entry"),
 	TEKTON(5,  4, 3, false, "Tekton"),
 	CRABS(4, 0, 3, false, "Crabs"),
@@ -20,7 +18,7 @@ public enum CMLayout
 
 	ENTRY_F2(7, 6, 2, false, "Start"),
 	VANGUARDS(6,  5, 2, false, "Vanguards"),
-	THIEVING(5, 4, 2, true, "Theiving", InstanceTemplate.RAIDS_THIEVING_F2),
+	THIEVING(5, 4, 2, true, "Thieving", InstanceTemplate.RAIDS_THIEVING_F2),
 	SCAV_F2(4,0,2,false,"Scavengers"),
 	VESPULA(0,1,2,false,"Vespula"),
 	PREP_F2(1,2,2,true,"Prep", InstanceTemplate.RAIDS_FARMING_F2),

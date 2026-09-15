@@ -17,18 +17,16 @@ import javax.swing.*;
 import javax.swing.border.MatteBorder;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.util.SwingUtil;
 
-@Slf4j
 public class FloorLayoutPanel extends JPanel
 {
 	@Getter	@Setter	private int currentFloor = 3;
 	private final int MAX_FLOOR = 3;
 
-	private CMChecklistPlugin plugin;
-	private CMChecklistConfig config;
+	private final CMChecklistPlugin plugin;
+	private final CMChecklistConfig config;
 
 	private JComponent[] roomButtons;
 	private int[] roomOrder;
@@ -83,7 +81,7 @@ public class FloorLayoutPanel extends JPanel
 	private Point getBtnCenter(JComponent btn)
 	{
 		if (btn == null)
-			return new Point(0, 0);	// For Olm
+			return new Point(0, 0); // Olm
 
 		int centerX = btn.getX() + btn.getWidth() / 2;
 		int centerY = btn.getY() + btn.getHeight() / 2;
@@ -157,12 +155,8 @@ public class FloorLayoutPanel extends JPanel
 		{
 			if (room == null) continue;
 			int roomIndex = room.ordinal() % 8;
-//			boolean isSelectedTemplate = template != null
-//					? room.getInstanceTemplate() == template
-//					: false;
 
 			roomOrder[roomIndex] = room.getRoomPos();
-
 			JLabel roomBtn = new JLabel(String.valueOf(roomIndex + 1));
 
 			roomBtn.setHorizontalAlignment(SwingConstants.CENTER);

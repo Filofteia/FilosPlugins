@@ -7,7 +7,6 @@ import javax.swing.border.EmptyBorder;
 import filo.cm.checklist.data.InstanceTemplate;
 import filo.cm.checklist.data.ItemBoxType;
 import filo.cm.checklist.util.SaveManager;
-import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
 import net.runelite.api.Item;
@@ -20,7 +19,6 @@ import net.runelite.client.game.chatbox.ChatboxItemSearch;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.util.AsyncBufferedImage;
 
-@Slf4j
 public class ItemBox extends JPanel
 {
 	private final JLabel itemLabel;
@@ -67,10 +65,6 @@ public class ItemBox extends JPanel
 			addPopupMenu(idx, type);
 	}
 
-	/**
-	 * This should be called on loading, or from 'update from equipped items'.
-	 * @param itemId Item's ID
-	 */
 	public void setItemById(int itemId)
 	{
 		if (itemId <= 0)

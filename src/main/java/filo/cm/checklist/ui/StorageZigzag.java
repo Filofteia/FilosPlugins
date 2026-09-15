@@ -7,7 +7,6 @@ import filo.cm.checklist.data.PotionType;
 import filo.cm.checklist.data.save.RoomSetup;
 import filo.cm.checklist.util.PotionUtil;
 import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.Item;
 import net.runelite.api.ItemContainer;
@@ -23,16 +22,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Slf4j
 public class StorageZigzag {
     private final int DEFAULT_COL_GAP = 44;
     private final int DEFAULT_ROW_GAP = 40;
 
-    private Client client;
-    private CMChecklistConfig config;
-    private CMChecklistPlugin plugin;
+    private final Client client;
+    private final CMChecklistConfig config;
+    private final CMChecklistPlugin plugin;
 
-    private Map<Integer, Integer> indexMap = new HashMap<>();
+    private final Map<Integer, Integer> indexMap = new HashMap<>();
     private List<Integer> leftOvers = new ArrayList<>();
 
     @Setter private boolean buildStorageCache;
@@ -49,7 +47,7 @@ public class StorageZigzag {
         if (setup == null)
             return;
 
-        List<Widget> availableWidgets = getStorageWidgets();    // All widgets
+        List<Widget> availableWidgets = getStorageWidgets();    // preghost
         if (availableWidgets.isEmpty())
             return;
 
@@ -59,53 +57,45 @@ public class StorageZigzag {
 
         int rowOffset = 0;
         List<Integer> claimedIndexes = new ArrayList<>();
-        if (config.zigzag() && config.zigzagEquipment())
+        List<Integer> matchedEquipmentIndex =
+                getEquipmentIndexes(
+                        setup.getEquippedItems(),
+                        availableWidgets,
+                        config.zigzag() && config.zigzagEquipment()
+                );
+        if (config.zigzag() && config.zigzagEquipment() && !matchedEquipmentIndex.isEmpty())
         {
-            List<Integer> matchedEquipmentIndex =
-                    getEquipmentIndexes(
-                            setup.getEquippedItems(),
-                            availableWidgets
-                    );
-
-            if (!matchedEquipmentIndex.isEmpty())
-            {
-                claimedIndexes.addAll(matchedEquipmentIndex);
-                layoutWidgets(availableWidgets, matchedEquipmentIndex, rowOffset, true);
-                rowOffset += 2;
-            }
+            claimedIndexes.addAll(matchedEquipmentIndex);
+            layoutWidgets(availableWidgets, matchedEquipmentIndex, rowOffset);
+            rowOffset += 2;
         }
 
-        List<Integer> matchedInventoryIndexesT =
-                getInventoryIndexesTest(
+        List<Integer> matchedInventoryIndexes =
+                getInventoryIndexes(
                         setup,
                         availableWidgets,
                         config.zigzag() && config.zigzagInventory()
                 );
-
-       if (config.zigzag() && config.zigzagInventory() && !matchedInventoryIndexesT.isEmpty())
+       if (config.zigzag() && config.zigzagInventory() && !matchedInventoryIndexes.isEmpty())
        {
-           claimedIndexes.addAll(matchedInventoryIndexesT);
-           layoutWidgets(availableWidgets, matchedInventoryIndexesT, rowOffset, true);
+           claimedIndexes.addAll(matchedInventoryIndexes);
+           layoutWidgets(availableWidgets, matchedInventoryIndexes, rowOffset);
            rowOffset += 4;
        }
        else
        {
-           plugin.sendInventoryWidgets(matchedInventoryIndexesT);
+           plugin.sendInventoryWidgets(matchedInventoryIndexes);
        }
 
-
         leftOvers = getLeftoverIndexes(claimedIndexes, availableWidgets);
+
         if (buildStorageCache)
             buildStorageMap(leftOvers);
         else
             insertToIndexMap(leftOvers, claimedIndexes);
 
-        if (!leftOvers.isEmpty()
-                && config.zigzag()
-                && (config.zigzagInventory()
-                || config.zigzagEquipment())
-        )
-            layoutWidgets(claimedIndexes, rowOffset);
+        if (!leftOvers.isEmpty() && config.zigzag())
+            layoutLeftovers(claimedIndexes, rowOffset);
     }
 
     private Widget getStorageParent()
@@ -124,7 +114,7 @@ public class StorageZigzag {
         return res;
     }
 
-    private Widget createGhostWidget(int itemId, boolean hidden)
+    private Widget createGhostWidget(int itemId)
     {
         Widget parentWidget = getStorageParent();
         if (parentWidget == null)
@@ -136,12 +126,12 @@ public class StorageZigzag {
         fakeItem.setOriginalHeight(32);
         fakeItem.setOpacity(200);
         fakeItem.setItemQuantityMode(0);
-        fakeItem.setHidden(hidden);
+        fakeItem.setHidden(true);
         return fakeItem;
     }
 
     // gets the index list without creating ghosts or removing from the storageItemm lists
-    private List<Integer> getInventoryIndexesTest(RoomSetup setup, List<Widget> storageItems, boolean invasive)
+    private List<Integer> getInventoryIndexes(RoomSetup setup, List<Widget> storageItems, boolean invasive)
     {
         ItemContainer inventory = client.getItemContainer(InventoryID.INV);
         if (inventory == null)
@@ -177,35 +167,35 @@ public class StorageZigzag {
             boolean shouldCreateGhost = false;
             int displayIndex = -1;
 
-            if (isBrew(requiredId))
+            if (hasRole(requiredId, PotionRole.BREW))
             {
                 boolean shouldGhost = brewCounter < brewsToGhost;
                 brewCounter++;
                 if (shouldGhost)
                     shouldCreateGhost = true;
                 else
-                    displayIndex = findFirstInventoryMatch(widgets, requiredId, false);
+                    displayIndex = findFirstInventoryMatch(widgets, requiredId);
             }
 
-            else if (isRestore(requiredId))
+            else if (hasRole(requiredId, PotionRole.RESTORE))
             {
                 boolean shouldGhost = restCounter < restToGhost;
                 restCounter++;
                 if (shouldGhost)
                     shouldCreateGhost = true;
                 else
-                    displayIndex = findFirstInventoryMatch(widgets, requiredId, false);
+                    displayIndex = findFirstInventoryMatch(widgets, requiredId);
             }
 
             else if (storageExists && !slotMatches(requiredId, currentId))
             {
-                displayIndex = findFirstInventoryMatch(widgets, requiredId, false);
+                displayIndex = findFirstInventoryMatch(widgets, requiredId);
             }
 
             else if (storageExists && slotMatches(requiredId, currentId))
             {
                 if (stackable)
-                    displayIndex = findFirstInventoryMatch(widgets, requiredId, false);
+                    displayIndex = findFirstInventoryMatch(widgets, requiredId);
                 else
                     shouldCreateGhost = true;
             }
@@ -213,7 +203,7 @@ public class StorageZigzag {
             {
                 if (!slotMatches(requiredId, currentId))
                 {
-                    displayIndex = findFirstInventoryMatch(widgets, requiredId, false);
+                    displayIndex = findFirstInventoryMatch(widgets, requiredId);
                 }
                 else
                 {
@@ -229,7 +219,7 @@ public class StorageZigzag {
                 continue;
             }
 
-            if (displayIndex != -1) // can be from methods
+            if (displayIndex != -1)
             {
                 result.add(displayIndex);
                 if (invasive)
@@ -240,29 +230,20 @@ public class StorageZigzag {
         return result;
     }
 
-    private boolean removeWidgetByIndex(List<Widget> widgets, int widgetIndex)
+    private void removeWidgetByIndex(List<Widget> widgets, int widgetIndex)
     {
-        return widgets.removeIf(w -> w.getIndex() == widgetIndex);
+        widgets.removeIf(w -> w.getIndex() == widgetIndex);
     }
 
-    /**
-     * Find the index of the first inventory slot matching reqId
-     * @param widgets All available widgets
-     * @param reqId ID you wish to find
-     * @param invsaive
-     * @return Item Index, or -1 if null, or -2 if createGhost
-     */
-    private int findFirstInventoryMatch(List<Widget> widgets, int reqId, boolean invsaive)
+    // Item Index | -1 null | -2 createGhost
+    private int findFirstInventoryMatch(List<Widget> widgets, int reqId)
     {
         int bestScore = Integer.MAX_VALUE;
         int widgetIndex = -1;
 
-        for (int i = 0; i < widgets.size(); i++)
-        {
-            Widget widget = widgets.get(i);
-
+        for (Widget widget : widgets) {
             int widgetId = widget.getItemId();
-            if (widgetId == 6512)   // null thing
+            if (widgetId == ItemID.BLANKOBJECT)
                 continue;
 
             int itemScore = matchScore(reqId, widgetId);
@@ -271,35 +252,28 @@ public class StorageZigzag {
                 return widgetIndex;
             }
 
-            if (itemScore < bestScore)
-            {
+            if (itemScore < bestScore) {
                 bestScore = itemScore;
                 widgetIndex = widget.getIndex();
             }
         }
 
-        if (widgetIndex == -1)  // non-existent, create a ghost instead (-2 = ghost req)
-            widgetIndex = -2;//createGhostIndex(reqId);
+        if (widgetIndex == -1)
+            widgetIndex = -2;
 
         return widgetIndex;
     }
 
     private int createGhostIndex(int itemId)
     {
-        Widget ghost = createGhostWidget(itemId, true);
-        if (ghost == null)
-            return -1;
-        return ghost.getIndex();
+        Widget ghost = createGhostWidget(itemId);
+        return ghost == null ? -1 : ghost.getIndex();
     }
 
-    private int findItemMatch(List<Widget> widgets, int itemId)
+    private int findEquipmentMatch(List<Widget> widgets, int itemId)
     {
-        for (int i = 0; i < widgets.size(); i++)
-        {
-            Widget widget = widgets.get(i);
-            if (widget.getItemId() == itemId)
-            {
-//                widgets.remove(widget);
+        for (Widget widget : widgets) {
+            if (widget.getItemId() == itemId) {
                 return widget.getIndex();
             }
         }
@@ -307,7 +281,7 @@ public class StorageZigzag {
         return -1;
     }
 
-    private List<Integer> getEquipmentIndexes(List<Integer> requiredIDs, List<Widget> widgets)
+    private List<Integer> getEquipmentIndexes(List<Integer> requiredIDs, List<Widget> widgets, boolean invasive)
     {
         List<Integer> results = new ArrayList<>();
         for (int reqId : requiredIDs)
@@ -315,9 +289,11 @@ public class StorageZigzag {
             if (reqId <= 0)
                 continue;
 
-            int match = findItemMatch(widgets, reqId);
+            int match = findEquipmentMatch(widgets, reqId);
             if (match != -1)
             {
+                if (invasive)
+                    removeWidgetByIndex(widgets, match);
                 results.add(match);
             }
             else
@@ -346,12 +322,9 @@ public class StorageZigzag {
     }
 
     // Leftovers with map support
-    private void layoutWidgets(List<Integer> claimedIndexes, int rowOffset)
+    private void layoutLeftovers(List<Integer> claimedIndexes, int rowOffset)
     {
         List<Widget> allWidgets = getStorageWidgets();
-
-        int startX = 0;
-        int startY = rowOffset * DEFAULT_ROW_GAP;
         for (Map.Entry<Integer, Integer> entrySet : indexMap.entrySet())
         {
             int widgetSlot = entrySet.getKey();
@@ -365,27 +338,15 @@ public class StorageZigzag {
                 || widget.getItemId() == ItemID.BLANKOBJECT)
                 continue;
 
-            widget.setHidden(false);
-
-            int maxRow = config.compactZigzag() ? 9 : 8;
-            int row = widgetSlot / maxRow;
-            int col = widgetSlot % maxRow;
-
-            widget.setOriginalX(startX + col * (config.compactZigzag() ? 38 : DEFAULT_COL_GAP));
-            widget.setOriginalY(startY + row * (config.compactZigzag() ? 34 : DEFAULT_ROW_GAP));
-            widget.setOnDragListener((Object[]) null);
-            widget.revalidate();
+            layoutWidget(widget, widgetSlot, rowOffset, false);
         }
     }
 
-    private void layoutWidgets(List<Widget> availableWidgets, List<Integer> widgetIndexes, int rowOffset, boolean zigzag)
+    private void layoutWidgets(List<Widget> availableWidgets, List<Integer> widgetIndexes, int rowOffset)
     {
         List<Widget> allWidgets = getStorageWidgets();
 
-        int startX = 0;
-        int startY = rowOffset * DEFAULT_ROW_GAP;
         int slot = 0;
-
         for (int idx : widgetIndexes)
         {
             if (idx == -1 || idx >= allWidgets.size())
@@ -395,21 +356,34 @@ public class StorageZigzag {
             if (widget == null)
                 continue;
 
-            if (widget.isHidden())
-                widget.setHidden(false);
-
-            int maxRow = config.compactZigzag() ? 9 : 8;
-            int maxZigzag = maxRow * 2;
-            int row = zigzag ? slot % 2 + ((slot / maxZigzag) * 2) : slot / maxRow;
-            int col = zigzag ? slot / 2 % maxRow : slot % maxRow;
-
-            widget.setOriginalX(startX + col * (config.compactZigzag() ? 38 : DEFAULT_COL_GAP));
-            widget.setOriginalY(startY + row * (config.compactZigzag() ? 34 : DEFAULT_ROW_GAP));
-            widget.setOnDragListener((Object[]) null);  // 1609 bug might rewrite if wanted
-            widget.revalidate();
+            layoutWidget(widget, slot, rowOffset, true);
 
             slot++;
         }
+    }
+
+    private void layoutWidget(
+            Widget widget,
+            int slot,
+            int rowOffset,
+            boolean zigzag)
+    {
+        boolean compact = config.compactZigzag();
+        int columns = compact ? 9 : 8;
+
+        int row = zigzag
+                ? slot % 2 + (slot / (columns * 2)) * 2
+                : slot / columns;
+
+        int column = zigzag
+                ? slot / 2 % columns
+                : slot % columns;
+
+        widget.setHidden(false);
+        widget.setOriginalX(column * (compact ? 38 : DEFAULT_COL_GAP));
+        widget.setOriginalY(rowOffset * (compact ? 34 : DEFAULT_ROW_GAP) + row * (compact ? 34 : DEFAULT_ROW_GAP));
+        widget.setOnDragListener((Object[]) null);
+        widget.revalidate();
     }
 
     public boolean slotMatches(int itemId, int requiredId)
@@ -422,9 +396,16 @@ public class StorageZigzag {
                 reqType.contains(itemId);
     }
 
+    private boolean hasRole(int itemId, PotionRole role)
+    {
+        PotionType type = PotionType.fromItemId(itemId);
+        return type != null && type.getRole() == role;
+    }
+
     private boolean isBrew(int reqId)
     {
         PotionType type = PotionType.fromItemId(reqId);
+
         return type == PotionType.SARADOMIN_BREW
                 || type == PotionType.XERICS_AID_STRONG
                 || type == PotionType.XERICS_AID
@@ -454,7 +435,7 @@ public class StorageZigzag {
         if (potionTypeWidget == null)
             return Integer.MAX_VALUE;
 
-        int potionClamp = 1;    // Was going to make this a config option but not
+        int potionClamp = 1;
         int requiredDose = potionTypeRequired.getDoses(requiredId);
         int widgetDose = potionTypeWidget.getDoses(widgetId);
         if (widgetDose < requiredDose && widgetDose < potionClamp)

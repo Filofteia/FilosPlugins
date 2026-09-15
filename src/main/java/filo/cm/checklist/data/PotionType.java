@@ -36,8 +36,7 @@ public enum PotionType {
     }
 
     PotionType(int... itemIds) {
-        this.itemIds = itemIds;
-        this.role = PotionRole.OTHER;
+        this(PotionRole.OTHER, itemIds);
     }
 
     public int getDoses(int itemId)
@@ -65,11 +64,7 @@ public enum PotionType {
     public static boolean isPotionMatch(int reqId, int itemId)
     {
         PotionType reqType = fromItemId(reqId);
-        PotionType itemType = fromItemId(itemId);
-        if (reqType == null || itemType == null)
-            return false;
-
-        return reqType == itemType;
+        return reqType != null && reqType.contains(itemId);
     }
 
     public boolean contains(int itemId)

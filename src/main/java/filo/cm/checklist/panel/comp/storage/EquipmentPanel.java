@@ -2,21 +2,15 @@ package filo.cm.checklist.panel.comp.storage;
 
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
-
 import filo.cm.checklist.data.InstanceTemplate;
 import filo.cm.checklist.data.ItemBoxType;
 import filo.cm.checklist.data.save.RoomSetup;
 import filo.cm.checklist.util.ItemBoxFactory;
-import filo.cm.checklist.util.SaveManager;
-import lombok.extern.slf4j.Slf4j;
-import net.runelite.client.callback.ClientThread;
 import net.runelite.client.util.SwingUtil;
-
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
-@Slf4j
 public class EquipmentPanel extends JPanel
 {
 	// {-1, -1} is null entries, usually like jaw slot or something to skip making box
@@ -31,17 +25,11 @@ public class EquipmentPanel extends JPanel
 					{0, 4}, {1, 4}, {-1, -1}, {2, 4}, {2, 1}
 			};
 
-	private ClientThread clientThread;
-	private SaveManager saveManager;
 	private ItemBoxFactory itemBoxFactory;
-	private InstanceTemplate template;
 
-	public EquipmentPanel(ClientThread clientThread, SaveManager saveManager, ItemBoxFactory itemBoxFactory, InstanceTemplate template)
+	public EquipmentPanel(ItemBoxFactory itemBoxFactory, InstanceTemplate template)
 	{
-		this.clientThread = clientThread;
-		this.saveManager = saveManager;
 		this.itemBoxFactory = itemBoxFactory;
-		this.template = template;
 
 		setLayout(new GridBagLayout());
 		setBorder(new EmptyBorder(2, 30, 2, 30));

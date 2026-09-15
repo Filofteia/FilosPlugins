@@ -13,7 +13,6 @@ import java.util.ArrayList;
 import javax.inject.Inject;
 
 import filo.cm.checklist.util.PotionUtil;
-import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.gameval.InterfaceID;
 import net.runelite.api.widgets.WidgetItem;
 import net.runelite.client.game.ItemManager;
@@ -21,7 +20,6 @@ import net.runelite.client.ui.overlay.WidgetItemOverlay;
 import net.runelite.client.util.ColorUtil;
 import net.runelite.client.util.ImageUtil;
 
-@Slf4j
 public class ItemHighlights extends WidgetItemOverlay
 {
 	private final CMChecklistPlugin plugin;

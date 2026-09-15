@@ -25,12 +25,12 @@ import java.util.stream.Collectors;
 @Slf4j
 public class PresetPanel extends JPanel
 {
-    private CMChecklistPlugin plugin;
-    private SaveManager saveManager;
-    private Gson gson;
+    private final CMChecklistPlugin plugin;
+    private final SaveManager saveManager;
+    private final Gson gson;
 
-    private IconTextField searchBar = new IconTextField();
-    private JPanel presetListPanel = new JPanel();
+    private final IconTextField searchBar = new IconTextField();
+    private final JPanel presetListPanel = new JPanel();
 
     private static final ImageIcon ADD_ICON;
     private static final ImageIcon ADD_ICON_HOVERED;

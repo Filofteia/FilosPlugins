@@ -33,11 +33,10 @@ public class SaveManager {
     private final String GROUP_KEY = "cmstorage";
     private final String GROUP_KEYLIST = "keylist";
 
-    private Client client;
-    private CMChecklistPlugin plugin;
-    private ConfigManager configManager;
-    private ClientThread clientThread;
-    private Gson gson;
+    private final Client client;
+    private final ConfigManager configManager;
+    private final ClientThread clientThread;
+    private final Gson gson;
 
     private List<UUID> uuidKeyList = new ArrayList<>();
     @Getter private List<RaidSetup> raidSetupList = new ArrayList<>();
@@ -45,7 +44,6 @@ public class SaveManager {
 
     public SaveManager(ConfigManager configManager, CMChecklistPlugin plugin, Client client, ClientThread clientThread) {
         this.configManager = configManager;
-        this.plugin = plugin;
         this.client = client;
         this.clientThread = clientThread;
         this.gson = plugin.getGson();
@@ -94,7 +92,6 @@ public class SaveManager {
         }
     }
 
-    // call on group make / delete
     public void saveIndexList()
     {
         String uuidKeyListJson = gson.toJson(uuidKeyList);
@@ -146,54 +143,39 @@ public class SaveManager {
                 .findFirst().orElse(null);
     }
 
-    public RaidSetup getByName(String name)
-    {
-        return raidSetupList.stream()
-                .filter(setup -> setup.getName().equals(name))
-                .findFirst().orElse(null);
-    }
-
     public RaidSetup getSetupById(UUID uuid)
     {
         return getByUUID(uuid);
     }
 
-    public boolean importSetup(RaidSetup setup)
+    public void importSetup(RaidSetup setup)
     {
         int replacementIndex = getSetupIndex(setup);
         if (replacementIndex != -1)
         {
             raidSetupList.set(replacementIndex, setup);
             saveByUUID(setup);
-            return true;
+            return;
         }
 
         uuidKeyList.add(setup.getId());
         raidSetupList.add(setup);
         saveIndexList();
         saveByUUID(setup);
-        return true;
     }
 
 
-    public RaidSetup createSetup(String name)
+    public void createSetup(String name)
     {
         if (hasSetup(name))
-            return null;
+            return;
 
         RaidSetup setup = new RaidSetup(name);
-        if (setup != null)
-        {
-            boolean addedRaid = raidSetupList.add(setup);
-            boolean addedUUID = uuidKeyList.add(setup.getId());
 
-            saveIndexList();
-            saveByUUID(setup.getId());
-
-            return setup;
-        }
-
-        return null;
+        raidSetupList.add(setup);
+        uuidKeyList.add(setup.getId());
+        saveIndexList();
+        saveByUUID(setup.getId());
     }
 
     public boolean renameSetup(UUID id, String newName)
@@ -274,7 +256,7 @@ public class SaveManager {
     // Only called on the active setup
     public boolean saveEquipment(InstanceTemplate template)
     {
-        if (!loggedIn())
+        if (loggedOut())
             return false;
 
         RoomSetup room = getRoom(template);
@@ -297,7 +279,7 @@ public class SaveManager {
     // Only called on the active setup
     public boolean saveInventory(InstanceTemplate template)
     {
-        if (!loggedIn())
+        if (loggedOut())
             return false;
 
         RoomSetup room = getRoom(template);
@@ -327,12 +309,6 @@ public class SaveManager {
     {
         return raidSetupList.stream()
                 .anyMatch(setupEntry -> setupEntry.getName().equals(setupName));
-    }
-
-    public boolean hasSetup(UUID setupUUID)
-    {
-        return raidSetupList.stream()
-                .anyMatch(setupEntry -> setupEntry.getId().equals(setupUUID));
     }
 
     private int getSetupIndex(RaidSetup setup)
@@ -395,8 +371,8 @@ public class SaveManager {
         saveAll();
     }
 
-    public boolean loggedIn()
+    public boolean loggedOut()
     {
-        return client.getGameState() == GameState.LOGGED_IN;
+        return client.getGameState() != GameState.LOGGED_IN;
     }
 }

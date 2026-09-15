@@ -30,15 +30,13 @@ public class ElevatorPanel extends JPanel
 		DOWN_ICON_HOVERED = new ImageIcon(ImageUtil.alphaOffset(downIcon, -220));
 	}
 
-	private CMChecklistPlugin plugin;
 	private FloorLayoutPanel floorLayoutPanel;
 
 	private JButton upBtn;
 	private JButton downBtn;
 	private JLabel floorLbl;
-	public ElevatorPanel(CMChecklistPlugin plugin, FloorLayoutPanel floorLayoutPanel)
+	public ElevatorPanel(FloorLayoutPanel floorLayoutPanel)
 	{
-		this.plugin = plugin;
 		this.floorLayoutPanel = floorLayoutPanel;
 
 		setLayout(new BorderLayout());

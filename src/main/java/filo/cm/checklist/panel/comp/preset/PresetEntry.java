@@ -4,7 +4,6 @@ import com.google.gson.Gson;
 import filo.cm.checklist.CMChecklistPlugin;
 import filo.cm.checklist.data.save.RaidSetup;
 import filo.cm.checklist.util.SaveManager;
-import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.components.FlatTextField;
 import net.runelite.client.util.ImageUtil;
@@ -17,7 +16,6 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
 
-@Slf4j
 public class PresetEntry extends JPanel
 {
     private static final ImageIcon RENAME_PRESET;
@@ -44,12 +42,12 @@ public class PresetEntry extends JPanel
     private FlatTextField presetLabel;
     private JLabel presetLabelR;
 
-    private JPanel rightPanel;
-    private JButton editNameButton;
-    private JButton openPresetButton;
-    private JButton deletePresetButton;
+    private final JPanel rightPanel;
+    private final JButton editNameButton;
+    private final JButton openPresetButton;
+    private final JButton deletePresetButton;
 
-    private SaveManager saveManager;
+    private final SaveManager saveManager;
     private String name;
 
     private CMChecklistPlugin plugin;

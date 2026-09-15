@@ -29,10 +29,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
- * Entirely copied from Core: net.runelite.api - InstanceTemplates.java by Kamiel
- * Modified for CMs
-
- * An enumeration of possible instance templates and the area they occupy.
+ * Copied from Core: net.runelite.api - InstanceTemplates.java by Kamiel, then modified to CMs
  */
 @AllArgsConstructor
 public enum InstanceTemplate
@@ -55,57 +52,16 @@ public enum InstanceTemplate
 	// F0
 	RAIDS_OLM_F0(3224, 5712, 0, 16, 16, 0, "Olm");
 
-	/**
-	 * The base x-axis coordinate of the instance area.
-	 */
-	@Getter
-	private final int baseX;
+	@Getter	private final int baseX;
+	@Getter	private final int baseY;
+	@Getter	private final int plane;
+	@Getter	private final int width;
+	@Getter	private final int height;
+	@Getter	private final int playerFloor;
+	@Getter	private final String roomName;
 
-	/**
-	 * The base y-axis coordinate of the instance area.
-	 */
-	@Getter
-	private final int baseY;
-
-	/**
-	 * The plane the instance is on.
-	 */
-	@Getter
-	private final int plane;
-
-	/**
-	 * The width of the instance area.
-	 */
-	@Getter
-	private final int width;
-
-	/**
-	 * The height of the instance area.
-	 */
-	@Getter
-	private final int height;
-
-	/**
-	 * The floor the player has to be on to qualify
-	 */
-	@Getter
-	private final int playerFloor;
-
-	/**
-	 * The name of the room.
-	 */
-	@Getter
-	private final String roomName;
-
-	/**
-	 * Matches chunk data of an instance to the instance it belongs.
-	 *
-	 * @param chunkData the chunk data
-	 * @return the instance the chunk is in
-	 */
 	public static InstanceTemplate findMatch(int chunkData, int playerFloor)
 	{
-		int rotation = chunkData >> 1 & 0x3; //unused, but shows us the rotation of the chunk
 		int y = (chunkData >> 3 & 0x7FF) * 8;
 		int x = (chunkData >> 14 & 0x3FF) * 8;
 		int plane = chunkData >> 24 & 0x3;
@@ -115,7 +71,7 @@ public enum InstanceTemplate
 			if (plane == template.getPlane()
 				&& x >= template.getBaseX() && x < template.getBaseX() + template.getWidth()
 				&& y >= template.getBaseY() && y < template.getBaseY() + template.getHeight()
-				&& (playerFloor == template.playerFloor || playerFloor == -1))	/* -1 for debugging in regular Chambers */
+				&& (playerFloor == template.playerFloor || playerFloor == -1))
 			{
 				return template;
 			}

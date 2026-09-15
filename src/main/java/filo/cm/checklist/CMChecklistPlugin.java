@@ -76,7 +76,6 @@ import net.runelite.client.ui.NavigationButton;
 import net.runelite.client.ui.overlay.OverlayManager;
 import net.runelite.client.util.ImageUtil;
 
-@Slf4j
 @PluginDescriptor(
 	name = "CM Storage Presets",
 		description = "An Inventory Setup equivalent for Challenge Mode CoX",
@@ -107,14 +106,6 @@ public class CMChecklistPlugin extends Plugin {
 
 	private boolean isChallengeMode = false;
 	private boolean inRaid = false;
-
-	private final String SAVE_SETUP_TEXT = "Save Setup";
-	private final String CLEAR_SETUP_TEXT = "Clear Setup";
-
-	private final String MARK_ITEM_DEPOSIT_TEXT = "Mark-deposit";
-	private final String UNMARK_ITEM_DEPOSIT_TEXT = "Unmark-deposit";
-	private final String MARK_ITEM_WITHDRAW_TEXT = "Mark-withdraw";
-	private final String UNMARK_ITEM_WITHDRAW_TEXT = "Unmark-withdraw";
 
 	private final int[] CHEST_OBJ_IDS = {29769, 29770, 29779, 29780, 37978};
 
@@ -212,8 +203,8 @@ public class CMChecklistPlugin extends Plugin {
 		int templateId = pWorldView.getInstanceTemplateChunks()[pPosPlane][pPosX / 8][pPosY / 8];
 		InstanceTemplate template = InstanceTemplate.findMatch(templateId, pPosPlane);
 
-		if (activeTemplate != template)
-			onTemplateChanged(template);
+		if (activeTemplate != template && config.autoUpdateRoom())
+			requestLoadPreset(template);
 
 		activeRoomSetup = saveManager.getRoom(template);
 		activeTemplate = template;
@@ -260,19 +251,19 @@ public class CMChecklistPlugin extends Plugin {
 			int objectId = e.getIdentifier();
 			for (int chestId : CHEST_OBJ_IDS) {
 				if (chestId == objectId) {
-					client.getMenu().createMenuEntry(-1)
-							.setOption(CLEAR_SETUP_TEXT)
+                    client.getMenu().createMenuEntry(-1)
+							.setOption("Clear Setup")
 							.setTarget(e.getTarget())
 							.setIdentifier(e.getIdentifier())
 							.setType(MenuAction.RUNELITE)
-							.onClick(this::clearSetupData);
+							.onClick(this::clearFromStorage);
 
-					client.getMenu().createMenuEntry(-1)
-							.setOption(SAVE_SETUP_TEXT)
+                    client.getMenu().createMenuEntry(-1)
+							.setOption("Save Setup")
 							.setTarget(e.getTarget())
 							.setIdentifier(e.getIdentifier())
 							.setType(MenuAction.RUNELITE)
-							.onClick(this::writeSetupData);
+							.onClick(this::saveFromStorage);
 				}
 			}
 		}
@@ -289,8 +280,8 @@ public class CMChecklistPlugin extends Plugin {
 
 			int widgetItemId = itemWidget.getItemId();
 			boolean isTagged = saveManager.isTagged(activeTemplate, widgetItemId);
-			String markOptWithdraw = !isTagged ? MARK_ITEM_WITHDRAW_TEXT : UNMARK_ITEM_WITHDRAW_TEXT;
-			String menuOptDeposit = !isTagged ? MARK_ITEM_DEPOSIT_TEXT : UNMARK_ITEM_DEPOSIT_TEXT;
+			String markOptWithdraw = !isTagged ? "Mark-withdraw" : "Unmark-withdraw";
+			String menuOptDeposit = !isTagged ? "Mark-deposit" : "Unmark-deposit";
 
 			client.getMenu().createMenuEntry(-1)
 					.setOption(menuEntry.getOption().equalsIgnoreCase("store-x") ? menuOptDeposit : markOptWithdraw)
@@ -302,34 +293,27 @@ public class CMChecklistPlugin extends Plugin {
 		}
 	}
 
-	public void writeSetupData(MenuEntry entry) {
+	// These (writeSetup
+	public void saveFromStorage(MenuEntry entry) {
 		if (activeTemplate == null)
 			return;
 
-		boolean setupSaved = saveEquipment(activeTemplate);
-		if (setupSaved)
-			SwingUtilities.invokeLater(pluginPanel::buildStorageUI);
-	}
-
-	public boolean saveEquipment(InstanceTemplate templates) {
-		RoomSetup room = saveManager.getRoom(templates);
+		RoomSetup room = saveManager.getRoom(activeTemplate);
 		if (room == null)
-			return false;
+			return;
 
 		boolean equipment = saveManager.saveEquipment(activeTemplate);
 		boolean inventory = saveManager.saveInventory(activeTemplate);
-		return equipment && inventory;
+
+		if (equipment && inventory)
+			SwingUtilities.invokeLater(pluginPanel::buildStorageUI);
 	}
 
-	public void clearSetupData(MenuEntry entry) {
+	public void clearFromStorage(MenuEntry entry) {
 		if (activeTemplate == null)// || activeRoomSetup == null)
 			return;
 
-		clearRoomSetuo(activeTemplate);
-	}
-
-	public void clearRoomSetuo(InstanceTemplate templates) {
-		RoomSetup room = saveManager.getRoom(templates);
+		RoomSetup room = saveManager.getRoom(activeTemplate);
 		if (room == null)
 			return;
 
@@ -338,16 +322,14 @@ public class CMChecklistPlugin extends Plugin {
 	}
 
 
-	public boolean requestLoadPreset(InstanceTemplate template) {
+	public void requestLoadPreset(InstanceTemplate template) {
 		RoomSetup room = saveManager.getRoom(template);
 		if (room == null)
-			return false;
+			return;
 
 		SwingUtilities.invokeLater(() -> {
 			pluginPanel.requestSetup(template, room);
 		});
-
-		return true;
 	}
 
 	public void requestDeletePreset(RaidSetup setup) {
@@ -417,12 +399,6 @@ public class CMChecklistPlugin extends Plugin {
 
 		if (varbitId == VarbitID.RAIDS_CLIENT_INDUNGEON)
 			inRaid = varbitValue >0;
-	}
-
-	private void onTemplateChanged(InstanceTemplate newTemplate)
-	{
-		if (config.autoUpdateRoom())
-			requestLoadPreset(newTemplate);
 	}
 
 	public void requestStoragePanel(RaidSetup setup)

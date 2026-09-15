@@ -8,10 +8,8 @@ import filo.cm.checklist.data.ItemType;
 import filo.cm.checklist.data.PotionRole;
 import filo.cm.checklist.data.PotionType;
 import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
 
 @Data
-@Slf4j
 public class RoomSetup
 {
 	List<Integer> equippedItems = new ArrayList<>();
@@ -48,7 +46,6 @@ public class RoomSetup
 		boolean isWithdraw = taggedWithdrawItems.contains(itemId);
 		boolean isDeposit = taggedDepositItems.contains(itemId);
 		boolean isEquipment = equippedItems.contains(itemId);
-		boolean isInventory = inventoryItems.contains(itemId);
 
 		if (isEquipment)
 			return ItemType.EQUIP;

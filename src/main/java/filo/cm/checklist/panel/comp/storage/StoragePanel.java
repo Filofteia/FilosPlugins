@@ -8,7 +8,6 @@ import filo.cm.checklist.data.save.RoomSetup;
 import filo.cm.checklist.panel.comp.layout.RaidRoomPanel;
 import filo.cm.checklist.util.ItemBoxFactory;
 import filo.cm.checklist.util.SaveManager;
-import net.runelite.client.callback.ClientThread;
 import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.components.PluginErrorPanel;
 import net.runelite.client.util.ImageUtil;
@@ -19,17 +18,17 @@ import java.awt.image.BufferedImage;
 
 public class StoragePanel extends JPanel
 {
-    private RaidRoomPanel elevatorPanel;
+    private final RaidRoomPanel elevatorPanel;
 
-    private EquipmentPanel equipmentPanel;
-    private InventoryPanel inventoryPanel;
-    private TaggedItemsPanel depositPanel;
-    private TaggedItemsPanel withdrawPanel;
+    private final EquipmentPanel equipmentPanel;
+    private final InventoryPanel inventoryPanel;
+    private final TaggedItemsPanel depositPanel;
+    private final TaggedItemsPanel withdrawPanel;
 
-    private JLabel equipmentLabel;
-    private JLabel inventoryLabel;
-    private JLabel depositLabel;
-    private JLabel withdrawLabel;
+    private final JLabel equipmentLabel;
+    private final JLabel inventoryLabel;
+    private final JLabel depositLabel;
+    private final JLabel withdrawLabel;
 
     private static final ImageIcon SETUP_ICON;
     private static final ImageIcon SETUP_ICON_HOVERED;
@@ -56,13 +55,12 @@ public class StoragePanel extends JPanel
         EXIT_ICON_HOVERED = new ImageIcon(ImageUtil.alphaOffset(exitIcon, -220));
     }
 
-    private CMChecklistPlugin plugin;
-    private SaveManager saveManager;
+    private final CMChecklistPlugin plugin;
+    private final SaveManager saveManager;
     private InstanceTemplate template;
     public StoragePanel(
             CMChecklistPlugin plugin,
             CMChecklistConfig config,
-            ClientThread clientThread,
             SaveManager saveManager,
             ItemBoxFactory itemBoxFactory,
             InstanceTemplate template
@@ -75,10 +73,10 @@ public class StoragePanel extends JPanel
         setAlignmentX(CENTER_ALIGNMENT);
 
         elevatorPanel = new RaidRoomPanel(plugin, config);
-        equipmentPanel = new EquipmentPanel(clientThread, saveManager, itemBoxFactory, template);
-        inventoryPanel = new InventoryPanel(clientThread, saveManager, itemBoxFactory, template);
-        depositPanel = new TaggedItemsPanel(clientThread, saveManager, itemBoxFactory, template, true);
-        withdrawPanel = new TaggedItemsPanel(clientThread, saveManager, itemBoxFactory, template, false);
+        equipmentPanel = new EquipmentPanel(itemBoxFactory, template);
+        inventoryPanel = new InventoryPanel(itemBoxFactory, template);
+        depositPanel = new TaggedItemsPanel(saveManager, itemBoxFactory, template, true);
+        withdrawPanel = new TaggedItemsPanel(saveManager, itemBoxFactory, template, false);
         equipmentLabel = new JLabel("Equipment");
         inventoryLabel = new JLabel("Inventory");
         depositLabel = new JLabel("Deposit");
@@ -99,10 +97,7 @@ public class StoragePanel extends JPanel
         if (setup != null)
             setupName.setText(setup.getName());
 
-        boolean tryRefresh = false; // future feature
-        RoomSetup roomSetup = saveManager.getRoom(template);
-        if (roomSetup != null)
-            tryRefresh = true;
+        RoomSetup roomSetup = saveManager.getRoom(template); // null is fine for ppanels + savemanager
 
         setupName.setFont(FontManager.getRunescapeBoldFont());
 
@@ -195,7 +190,7 @@ public class StoragePanel extends JPanel
     private void addListener(JButton button, Runnable action)
     {
         button.addActionListener(e -> {
-            if (!saveManager.loggedIn())
+            if (saveManager.loggedOut())
             {
                 JOptionPane.showMessageDialog(
                         null,

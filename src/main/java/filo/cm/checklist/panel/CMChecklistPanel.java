@@ -9,15 +9,13 @@ import filo.cm.checklist.panel.comp.storage.StoragePanel;
 import javax.swing.BoxLayout;
 import filo.cm.checklist.util.ItemBoxFactory;
 import filo.cm.checklist.util.SaveManager;
-import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.ui.PluginPanel;
 
-@Slf4j
 public class CMChecklistPanel extends PluginPanel
 {
-	private StoragePanel storagePanel;
-	private PresetPanel presetPanel;
+	private final StoragePanel storagePanel;
+	private final PresetPanel presetPanel;
 
 	public CMChecklistPanel(
 			CMChecklistPlugin plugin,
@@ -27,7 +25,7 @@ public class CMChecklistPanel extends PluginPanel
 			ItemBoxFactory itemBoxFactory
 	)
 	{
-		storagePanel = new StoragePanel(plugin, config, clientThread, saveManager, itemBoxFactory, null);
+		storagePanel = new StoragePanel(plugin, config, saveManager, itemBoxFactory, null);
 		presetPanel = new PresetPanel(plugin, saveManager);
 
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));

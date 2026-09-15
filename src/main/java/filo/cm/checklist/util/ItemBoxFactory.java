@@ -29,7 +29,7 @@ public class ItemBoxFactory {
             InstanceTemplate instanceTemplate
     )
     {
-        return new ItemBox(clientThread, client, saveManager, itemManager, idx, type, chatboxItemSearch, instanceTemplate, null);
+        return createItemBox(idx, type, instanceTemplate, null);
     }
 
     public ItemBox createItemBox(

@@ -52,6 +52,7 @@ import net.runelite.api.ItemContainer;
 import net.runelite.api.MenuAction;
 import net.runelite.api.MenuEntry;
 import net.runelite.api.Player;
+import net.runelite.api.ScriptID;
 import net.runelite.api.WorldView;
 import net.runelite.api.events.GameTick;
 import net.runelite.api.events.MenuEntryAdded;
@@ -366,7 +367,8 @@ public class CMChecklistPlugin extends Plugin {
 			int scrollbarScriptComp = scrollbar.getId();
 			int occupiedScriptComp = occupied.getId();
 
-			client.runScript(1607, itemScriptComp, scrollbarScriptComp, occupiedScriptComp);
+			client.runScript(ScriptID.RAIDS_STORAGE_PRIVATE_ITEMS, itemScriptComp, scrollbarScriptComp, occupiedScriptComp);
+
 			if (runZigZag)
 				storageZigzag.layout(saveManager.getRoom(activeTemplate));
 		});

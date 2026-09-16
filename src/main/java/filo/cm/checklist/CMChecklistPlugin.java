@@ -134,7 +134,6 @@ public class CMChecklistPlugin extends Plugin {
 
 			isChallengeMode = client.getVarbitValue(VarbitID.RAIDS_CHALLENGE_MODE) > 0;
 			inRaid = client.getVarbitValue(VarbitID.RAIDS_CLIENT_INDUNGEON) > 0;
-			refreshPrivateStorage(true);
 		});
 	}
 
@@ -151,8 +150,6 @@ public class CMChecklistPlugin extends Plugin {
 		pluginPanel = null;
 		isChallengeMode = false;
 		inRaid = false;
-
-		clientThread.invokeLater(() -> refreshPrivateStorage(false));
 	}
 
 	@Subscribe
@@ -353,40 +350,6 @@ public class CMChecklistPlugin extends Plugin {
 		saveManager.toggleItemTag(activeTemplate, entry.getItemId(), isDeposit);
 	}
 
-	private void refreshPrivateStorage(boolean runZigZag)
-	{
-		clientThread.invokeLater(() -> {
-			Widget items = client.getWidget(InterfaceID.RAIDS_STORAGE_PRIVATE, 6);
-			Widget scrollbar = client.getWidget(InterfaceID.RAIDS_STORAGE_PRIVATE, 7);
-			Widget occupied = client.getWidget(InterfaceID.RAIDS_STORAGE_PRIVATE, 2);
-
-			if (items == null || scrollbar == null || occupied == null)
-				return;
-
-			int itemScriptComp = items.getId();
-			int scrollbarScriptComp = scrollbar.getId();
-			int occupiedScriptComp = occupied.getId();
-
-			client.runScript(ScriptID.RAIDS_STORAGE_PRIVATE_ITEMS, itemScriptComp, scrollbarScriptComp, occupiedScriptComp);
-
-			if (runZigZag)
-				storageZigzag.layout(saveManager.getRoom(activeTemplate));
-		});
-	}
-
-	@Subscribe
-	public void onConfigChanged(ConfigChanged e)
-	{
-		if (e.getGroup().equalsIgnoreCase("cmchecklist"))
-		{
-			if (e.getKey().equalsIgnoreCase("zigzag")
-			|| e.getKey().equalsIgnoreCase("zigzagEquipment")
-			|| e.getKey().equalsIgnoreCase("zigzagInventory")
-			|| e.getKey().equalsIgnoreCase("compactZigzag"))
-				refreshPrivateStorage(true);
-		}
-	}
-
 	@Subscribe
 	public void onVarbitChanged(VarbitChanged e)
 	{
@@ -407,7 +370,6 @@ public class CMChecklistPlugin extends Plugin {
 
 		saveManager.setActiveSetup(setup);
 		pluginPanel.displayStoragePanel();
-		refreshPrivateStorage(true);
 	}
 
 	public void requestClosePreset()

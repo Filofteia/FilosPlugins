@@ -5,7 +5,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import filo.cm.checklist.CMChecklistPlugin;
 import filo.cm.checklist.data.InstanceTemplate;
-import filo.cm.checklist.data.ItemBoxType;
+import filo.cm.checklist.data.ItemType;
 import filo.cm.checklist.data.save.RaidSetup;
 import filo.cm.checklist.data.save.RoomSetup;
 import lombok.Getter;
@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -101,12 +102,7 @@ public class SaveManager {
     public void saveAll()
     {
         saveIndexList();
-        saveByUUIDs(uuidKeyList);
-    }
-
-    public void saveByUUIDs(List<UUID> uuidList)
-    {
-        uuidList.forEach(this::saveByUUID);
+        uuidKeyList.forEach(this::saveByUUID);
     }
 
     public void saveByUUID(RaidSetup setup)
@@ -143,11 +139,6 @@ public class SaveManager {
                 .findFirst().orElse(null);
     }
 
-    public RaidSetup getSetupById(UUID uuid)
-    {
-        return getByUUID(uuid);
-    }
-
     public void importSetup(RaidSetup setup)
     {
         int replacementIndex = getSetupIndex(setup);
@@ -180,7 +171,7 @@ public class SaveManager {
 
     public boolean renameSetup(UUID id, String newName)
     {
-        RaidSetup setup = getSetupById(id);
+        RaidSetup setup = getByUUID(id);
 
         if (setup == null)
             return false;
@@ -193,7 +184,7 @@ public class SaveManager {
         return true;
     }
 
-    public void updateItem(int idx, ItemBoxType type, int itemId, InstanceTemplate template)
+    public void updateItem(int idx, ItemType type, int itemId, InstanceTemplate template)
     {
         RoomSetup room = getRoom(template);
         if (room == null)
@@ -203,7 +194,7 @@ public class SaveManager {
         saveByUUID(activeSetup);
     }
 
-    public void updateItem(int idx, ItemBoxType type, int itemId, InstanceTemplate template, Consumer<Boolean> status)
+    public void updateItem(int idx, ItemType type, int itemId, InstanceTemplate template, Consumer<Boolean> status)
     {
         RoomSetup room = getRoom(template);
         if (room != null) {
@@ -217,40 +208,33 @@ public class SaveManager {
         }
     }
 
-    public void saveAll(InstanceTemplate template, Consumer<Boolean> callback)
+    public void saveContainer(BooleanSupplier save, Consumer<Boolean> callback)
     {
         clientThread.invokeLater(() -> {
-            boolean savedInv = saveInventory(template);
-            boolean savedEquip = saveEquipment(template);
-            if (callback != null)
-            {
-                if (savedInv && savedEquip) {
-                    SwingUtilities.invokeLater(() -> callback.accept(true));
-                    return;
-                }
-
-                SwingUtilities.invokeLater(() -> callback.accept(false));
-            }
-        });
-    }
-
-
-    public void saveEquipment(InstanceTemplate template, Consumer<Boolean> callback)
-    {
-        clientThread.invokeLater(() -> {
-            boolean saved = saveEquipment(template);
+            boolean saved = save.getAsBoolean();
             if (callback != null)
                 SwingUtilities.invokeLater(() -> callback.accept(saved));
         });
+    }
+
+    public void saveAll(InstanceTemplate template, Consumer<Boolean> callback)
+    {
+        saveContainer(() ->
+        {
+            boolean savedEquip = saveEquipment(template);
+            boolean savedInv = saveInventory(template);
+            return savedInv && savedEquip;
+        }, callback);
+    }
+
+    public void saveEquipment(InstanceTemplate template, Consumer<Boolean> callback)
+    {
+        saveContainer(() -> saveEquipment(template), callback);
     }
 
     public void saveInventory(InstanceTemplate template, Consumer<Boolean> callback)
     {
-        clientThread.invokeLater(() -> {
-            boolean saved = saveInventory(template);
-            if (callback != null)
-                SwingUtilities.invokeLater(() -> callback.accept(saved));
-        });
+        saveContainer(() -> saveInventory(template), callback);
     }
 
     // Only called on the active setup

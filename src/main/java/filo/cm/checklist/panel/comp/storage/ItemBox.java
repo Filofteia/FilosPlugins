@@ -5,7 +5,7 @@ import java.awt.Dimension;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import filo.cm.checklist.data.InstanceTemplate;
-import filo.cm.checklist.data.ItemBoxType;
+import filo.cm.checklist.data.ItemType;
 import filo.cm.checklist.util.SaveManager;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
@@ -35,7 +35,7 @@ public class ItemBox extends JPanel
 				   SaveManager saveManager,
 				   ItemManager itemManager,
 				   int idx,
-				   ItemBoxType type,
+				   ItemType type,
 				   ChatboxItemSearch chatboxItemSearch,
 				   InstanceTemplate template,
 				   Runnable refresh
@@ -94,7 +94,7 @@ public class ItemBox extends JPanel
 		});
 	}
 
-	private void addPopupMenu(int idx, ItemBoxType type)
+	private void addPopupMenu(int idx, ItemType type)
 	{
 		JPopupMenu popupMenu = new JPopupMenu();
 
@@ -114,9 +114,9 @@ public class ItemBox extends JPanel
 		});
 
 
-		if (type == ItemBoxType.EQUIPMENT)
+		if (type == ItemType.EQUIPMENT)
 			replaceFromInventory.setText("Update from Equipment");
-		if (type != ItemBoxType.DEPOSIT && type != ItemBoxType.WITHDRAW)
+		if (type != ItemType.DEPOSIT && type != ItemType.WITHDRAW)
 			popupMenu.add(replaceFromInventory);
 		popupMenu.add(addFromSearch);
 		popupMenu.add(removeItem);
@@ -125,10 +125,10 @@ public class ItemBox extends JPanel
 		itemLabel.setComponentPopupMenu(popupMenu);
 	}
 
-	private void updateFromInventory(int idx, ItemBoxType type)
+	private void updateFromInventory(int idx, ItemType type)
 	{
 		clientThread.invokeLater(() -> {
-			boolean isInventory = type == ItemBoxType.INVENTORY;
+			boolean isInventory = type == ItemType.INVENTORY;
 			ItemContainer itemContainer = client.getItemContainer(isInventory ? InventoryID.INV : InventoryID.WORN);
 
 			if (itemContainer == null)
@@ -163,7 +163,7 @@ public class ItemBox extends JPanel
 		});
 	}
 
-	private void searchForItem(int idx, ItemBoxType type)
+	private void searchForItem(int idx, ItemType type)
 	{
 		clientThread.invokeLater(() -> {
 			if (client.getGameState() != GameState.LOGGED_IN)
@@ -189,8 +189,8 @@ public class ItemBox extends JPanel
 								template
 						);
 						SwingUtilities.invokeLater(() -> {
-							if ((type == ItemBoxType.DEPOSIT
-								|| type == ItemBoxType.WITHDRAW)
+							if ((type == ItemType.DEPOSIT
+								|| type == ItemType.WITHDRAW)
 								&& refresh != null)
 							{
 								refresh.run();
@@ -204,7 +204,7 @@ public class ItemBox extends JPanel
 		});
 	}
 
-	private void removeItem(int idx, ItemBoxType type)
+	private void removeItem(int idx, ItemType type)
 	{
 		clientThread.invokeLater(() ->
 		{
@@ -215,8 +215,8 @@ public class ItemBox extends JPanel
 					template
 			);
 			SwingUtilities.invokeLater(() -> {
-				if ((type == ItemBoxType.DEPOSIT
-					|| type == ItemBoxType.WITHDRAW)
+				if ((type == ItemType.DEPOSIT
+					|| type == ItemType.WITHDRAW)
 					&& refresh != null)
 				{
 					refresh.run();

@@ -66,7 +66,7 @@ public class PresetPanel extends JPanel
             if (name != null && !name.isEmpty())
             {
                 saveManager.createSetup(name);
-                refreshPresets(presetListPanel, searchBar);
+                refreshPresets();
             }
         });
 
@@ -78,7 +78,7 @@ public class PresetPanel extends JPanel
                 return;
 
             saveManager.importSetup(importedSetup);
-            refreshPresets(presetListPanel, searchBar);
+            refreshPresets();
         });
 
         buttonPanel.add(createButton, BorderLayout.WEST);
@@ -101,35 +101,30 @@ public class PresetPanel extends JPanel
             @Override
             public void insertUpdate(DocumentEvent e)
             {
-                refreshPresets(presetListPanel, searchBar);
+                refreshPresets();
             }
 
             @Override
             public void removeUpdate(DocumentEvent e)
             {
-                refreshPresets(presetListPanel, searchBar);
+                refreshPresets();
             }
 
             @Override
             public void changedUpdate(DocumentEvent e)
             {
-                refreshPresets(presetListPanel, searchBar);
+                refreshPresets();
             }
         });
 
         add(searchBar);
 
         add(Box.createVerticalStrut(7));
-        if (saveManager.getRaidSetupList() != null) {
-            for (RaidSetup room : saveManager.getRaidSetupList()) {
-                presetListPanel.add(new PresetEntry(plugin, saveManager, room));
-                presetListPanel.add(Box.createVerticalStrut(3));
-            }
-        }
+        refreshPresets();
         add(presetListPanel);
     }
 
-    private void refreshPresets(JPanel presetListPanel, IconTextField searchBar)
+    private void refreshPresets()
     {
         SwingUtilities.invokeLater(() -> {
             presetListPanel.removeAll();
@@ -207,6 +202,6 @@ public class PresetPanel extends JPanel
     public void build()
     {
         presetListPanel.removeAll();
-        refreshPresets(presetListPanel, searchBar);
+        refreshPresets();
     }
 }

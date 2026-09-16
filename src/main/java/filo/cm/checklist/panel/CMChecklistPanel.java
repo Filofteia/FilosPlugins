@@ -9,7 +9,6 @@ import filo.cm.checklist.panel.comp.storage.StoragePanel;
 import javax.swing.BoxLayout;
 import filo.cm.checklist.util.ItemBoxFactory;
 import filo.cm.checklist.util.SaveManager;
-import net.runelite.client.callback.ClientThread;
 import net.runelite.client.ui.PluginPanel;
 
 public class CMChecklistPanel extends PluginPanel
@@ -21,7 +20,6 @@ public class CMChecklistPanel extends PluginPanel
 			CMChecklistPlugin plugin,
 			CMChecklistConfig config,
 			SaveManager saveManager,
-			ClientThread clientThread,
 			ItemBoxFactory itemBoxFactory
 	)
 	{

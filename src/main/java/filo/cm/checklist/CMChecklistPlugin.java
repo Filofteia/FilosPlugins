@@ -45,7 +45,6 @@ import filo.cm.checklist.ui.StorageZigzag;
 import filo.cm.checklist.util.ItemBoxFactory;
 import filo.cm.checklist.util.SaveManager;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
 import net.runelite.api.Item;
@@ -116,7 +115,7 @@ public class CMChecklistPlugin extends Plugin {
 
 		saveManager = new SaveManager(configManager, this, client, clientThread);
 		itemBoxFactory = new ItemBoxFactory(clientThread, client, saveManager, itemManager, chatboxItemSearch);
-		pluginPanel = new CMChecklistPanel(this, config, saveManager, clientThread, itemBoxFactory);
+		pluginPanel = new CMChecklistPanel(this, config, saveManager, itemBoxFactory);
 
 		BufferedImage icon = ImageUtil.loadImageResource(CMChecklistPlugin.class, "icon.png");
 		panelButton = NavigationButton.builder()
@@ -186,7 +185,6 @@ public class CMChecklistPlugin extends Plugin {
 			brewContext = null;
 			return;
 		}
-
 
 		Player localPlayer = client.getLocalPlayer();
 		if (localPlayer == null)
@@ -293,7 +291,6 @@ public class CMChecklistPlugin extends Plugin {
 		}
 	}
 
-	// These (writeSetup
 	public void saveFromStorage(MenuEntry entry) {
 		if (activeTemplate == null)
 			return;
@@ -310,7 +307,7 @@ public class CMChecklistPlugin extends Plugin {
 	}
 
 	public void clearFromStorage(MenuEntry entry) {
-		if (activeTemplate == null)// || activeRoomSetup == null)
+		if (activeTemplate == null)
 			return;
 
 		RoomSetup room = saveManager.getRoom(activeTemplate);

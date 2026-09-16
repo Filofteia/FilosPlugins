@@ -3,7 +3,7 @@ package filo.cm.checklist.panel.comp.storage;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 import filo.cm.checklist.data.InstanceTemplate;
-import filo.cm.checklist.data.ItemBoxType;
+import filo.cm.checklist.data.ItemType;
 import filo.cm.checklist.data.save.RoomSetup;
 import filo.cm.checklist.util.ItemBoxFactory;
 import net.runelite.client.util.SwingUtil;
@@ -25,7 +25,7 @@ public class EquipmentPanel extends JPanel
 					{0, 4}, {1, 4}, {-1, -1}, {2, 4}, {2, 1}
 			};
 
-	private ItemBoxFactory itemBoxFactory;
+	private final ItemBoxFactory itemBoxFactory;
 
 	public EquipmentPanel(ItemBoxFactory itemBoxFactory, InstanceTemplate template)
 	{
@@ -54,17 +54,12 @@ public class EquipmentPanel extends JPanel
 
 			gbc.gridx = boxX;
 			gbc.gridy = boxY;
-			ItemBox itemBox = itemBoxFactory.createItemBox(i, ItemBoxType.EQUIPMENT, template);
+			ItemBox itemBox = itemBoxFactory.createItemBox(i, ItemType.EQUIPMENT, template);
 
 			if (i < equipmentIds.size())
 				itemBox.setItemById(equipmentIds.get(i));
 
 			add(itemBox, gbc);
 		}
-	}
-
-	public void loadFromSetup(InstanceTemplate template, RoomSetup setup)
-	{
-		build(template, setup);
 	}
 }

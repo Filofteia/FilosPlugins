@@ -53,9 +53,9 @@ public class ItemHighlights extends WidgetItemOverlay
 		return super.render(graphics);
 	}
 
-	private java.util.List<Integer> mismatchedItems = new ArrayList<>();
-	private int restoreRenders = 0;
-	private int brewRenders = 0;
+	private List<Integer> mismatchedItems = new ArrayList<>();
+	private int restoreRenders;
+	private int brewRenders;
 	@Override
 	public void renderItemOverlay(Graphics2D graphics, int itemId, WidgetItem widgetItem)
 	{
@@ -96,8 +96,8 @@ public class ItemHighlights extends WidgetItemOverlay
 				renderItemOverlay(graphics, itemId, widgetQty, config.inventoryColour(), widgetBounds, true);
 		}
 
-		boolean isBrew = PotionUtil.getRole(itemId) == PotionRole.BREW;
-		if (isBrew && brewContext != null)
+		PotionRole role = PotionUtil.getRole(itemId);
+		if (role == PotionRole.BREW && brewContext != null)
 		{
 			if (brewContext.isSkipRoom())
 				return;
@@ -112,14 +112,14 @@ public class ItemHighlights extends WidgetItemOverlay
 			return;
 		}
 
-		boolean isRestore = PotionUtil.getRole(itemId) == PotionRole.RESTORE;
-		if (isRestore && brewContext != null)
+		if (role == PotionRole.RESTORE && brewContext != null)
 		{
-			if (brewContext.isSkipRoom() || widgetItem.getWidget().getName().isBlank())
+			if (brewContext.isSkipRoom())
 				return;
 
 			int withdrawQuantity = brewContext.getMissingRestores() - restoreRenders;
 			int depositQuantity = brewContext.getSurplusRestores() - restoreRenders;
+
 			boolean isRendered = renderPotionWarnings(graphics, withdrawQuantity, depositQuantity, itemId, widgetQty, widgetBounds, containerGroupId);
 			if (isRendered)
 				restoreRenders++;
@@ -130,8 +130,9 @@ public class ItemHighlights extends WidgetItemOverlay
 		switch (itemType)
 		{
 			case NONE:
+			case INVENTORY:
 				return;
-			case EQUIP:
+			case EQUIPMENT:
 				if (config.highlightEquipment())
 					renderItemOverlay(graphics, itemId, widgetQty, config.equipmentColour(), widgetBounds, true);
 				break;

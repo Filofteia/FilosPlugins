@@ -41,15 +41,11 @@ public enum CMLayout
 	final int floor;
 	final boolean hasStorage;
 	final String roomName;
-	InstanceTemplate instanceTemplate;
+	final InstanceTemplate instanceTemplate;
 
 	CMLayout(int roomPos, int nextPos, int floor, boolean hasStorage, String roomName)
 	{
-		this.roomPos = roomPos;
-		this.nextPos = nextPos;
-		this.floor = floor;
-		this.hasStorage = hasStorage;
-		this.roomName = roomName;
+		this(roomPos, nextPos, floor, hasStorage, roomName, null);
 	}
 
 	CMLayout(int roomPos, int nextPos, int floor, boolean hasStorage, String roomName, InstanceTemplate instanceTemplate)

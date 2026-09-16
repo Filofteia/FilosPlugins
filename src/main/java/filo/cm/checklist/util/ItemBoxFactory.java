@@ -1,7 +1,7 @@
 package filo.cm.checklist.util;
 
 import filo.cm.checklist.data.InstanceTemplate;
-import filo.cm.checklist.data.ItemBoxType;
+import filo.cm.checklist.data.ItemType;
 import filo.cm.checklist.panel.comp.storage.ItemBox;
 import net.runelite.api.Client;
 import net.runelite.client.callback.ClientThread;
@@ -25,7 +25,7 @@ public class ItemBoxFactory {
 
     public ItemBox createItemBox(
             int idx,
-            ItemBoxType type,
+            ItemType type,
             InstanceTemplate instanceTemplate
     )
     {
@@ -34,7 +34,7 @@ public class ItemBoxFactory {
 
     public ItemBox createItemBox(
             int idx,
-            ItemBoxType type,
+            ItemType type,
             InstanceTemplate instanceTemplate,
             Runnable refresh
     )

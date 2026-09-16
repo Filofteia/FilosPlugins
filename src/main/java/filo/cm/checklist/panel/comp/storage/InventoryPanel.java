@@ -1,7 +1,7 @@
 package filo.cm.checklist.panel.comp.storage;
 
 import filo.cm.checklist.data.InstanceTemplate;
-import filo.cm.checklist.data.ItemBoxType;
+import filo.cm.checklist.data.ItemType;
 import filo.cm.checklist.data.save.RoomSetup;
 import filo.cm.checklist.util.ItemBoxFactory;
 import net.runelite.client.util.SwingUtil;
@@ -14,7 +14,7 @@ import javax.swing.border.EmptyBorder;
 public class InventoryPanel extends JPanel
 {
 
-	private ItemBoxFactory itemBoxFactory;
+	private final ItemBoxFactory itemBoxFactory;
 	public InventoryPanel(ItemBoxFactory itemBoxFactory, InstanceTemplate template)
 	{
 		this.itemBoxFactory = itemBoxFactory;
@@ -32,17 +32,12 @@ public class InventoryPanel extends JPanel
 
 		for (int i = 0; i < 28; i++)
 		{
-			ItemBox itemBox = itemBoxFactory.createItemBox(i, ItemBoxType.INVENTORY, template);
+			ItemBox itemBox = itemBoxFactory.createItemBox(i, ItemType.INVENTORY, template);
+
 			if (i < itemIds.size())
 				itemBox.setItemById(itemIds.get(i));
-			else
-				itemBox.setItemById(0);
+
 			add(itemBox);
 		}
-	}
-
-	public void loadFromSetup(InstanceTemplate template, RoomSetup setup)
-	{
-		build(template, setup);
 	}
 }

@@ -2,8 +2,6 @@ package filo.cm.checklist.data.save;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import filo.cm.checklist.data.ItemBoxType;
 import filo.cm.checklist.data.ItemType;
 import filo.cm.checklist.data.PotionRole;
 import filo.cm.checklist.data.PotionType;
@@ -16,42 +14,34 @@ public class RoomSetup
 	List<Integer> inventoryItems = new ArrayList<>();
 	List<Integer> taggedWithdrawItems = new ArrayList<>();
 	List<Integer> taggedDepositItems = new ArrayList<>();
-	int brewCount = 0;
-	int restCount = 0;
+	int brewCount;
+	int restCount;
 
 	public void toggleWithdrawTag(int itemId)
 	{
-		if (taggedDepositItems.contains(itemId) || equippedItems.contains(itemId))
-			return;
-
-		if (taggedWithdrawItems.contains(itemId))
-			taggedWithdrawItems.remove((Integer) itemId);
-		else
-			taggedWithdrawItems.add(itemId);
+		toggleTag(taggedWithdrawItems, taggedDepositItems, itemId);
 	}
 
 	public void toggleDepositTag(int itemId)
 	{
-		if (taggedWithdrawItems.contains(itemId) || equippedItems.contains(itemId))
-			return;
+		toggleTag(taggedDepositItems, taggedWithdrawItems, itemId);
+	}
 
-		if (taggedDepositItems.contains(itemId))
-			taggedDepositItems.remove((Integer) itemId);
-		else
-			taggedDepositItems.add(itemId);
+	private void toggleTag(List<Integer> tags, List<Integer> otherTags, int itemId)
+	{
+		otherTags.remove((Integer) itemId);
+
+		if (!tags.remove(Integer.valueOf(itemId)))
+			tags.add(itemId);
 	}
 
 	public ItemType getItemType(int itemId)
 	{
-		boolean isWithdraw = taggedWithdrawItems.contains(itemId);
-		boolean isDeposit = taggedDepositItems.contains(itemId);
-		boolean isEquipment = equippedItems.contains(itemId);
-
-		if (isEquipment)
-			return ItemType.EQUIP;
-		if (isDeposit)
+		if (equippedItems.contains(itemId))
+			return ItemType.EQUIPMENT;
+		if (taggedDepositItems.contains(itemId))
 			return ItemType.DEPOSIT;
-		if (isWithdraw)
+		if (taggedWithdrawItems.contains(itemId))
 			return ItemType.WITHDRAW;
 
 		return ItemType.NONE;
@@ -63,6 +53,8 @@ public class RoomSetup
 		inventoryItems.clear();
 		taggedDepositItems.clear();
 		taggedWithdrawItems.clear();
+		brewCount = 0;
+		restCount = 0;
 	}
 
 	public boolean isItemTagged(int itemId)
@@ -70,7 +62,7 @@ public class RoomSetup
 		return taggedWithdrawItems.contains(itemId) || taggedDepositItems.contains(itemId);
 	}
 
-	public void updateItem(int idx, int itemId, ItemBoxType type)
+	public void updateItem(int idx, int itemId, ItemType type)
 	{
 		switch (type)
 		{
@@ -79,6 +71,7 @@ public class RoomSetup
 				break;
 			case INVENTORY:
 				updateSlot(inventoryItems, idx, itemId);
+				calculatePotions();
 				break;
 			case WITHDRAW:
 				updateTaggedItem(taggedWithdrawItems, idx, itemId);
@@ -95,8 +88,7 @@ public class RoomSetup
 			return;
 
 		inventoryItems = items;
-		calculateBrews();
-		calculateRests();
+		calculatePotions();
 	}
 
 	private void updateSlot(List<Integer> items, int idx, int itemId)
@@ -107,8 +99,6 @@ public class RoomSetup
 		}
 
 		items.set(idx, itemId);
-		calculateBrews();
-		calculateRests();
 	}
 
 	private void updateTaggedItem(List<Integer> items, int idx, int itemId)
@@ -130,37 +120,21 @@ public class RoomSetup
 		}
 	}
 
-	public void calculateBrews()
+	private void calculatePotions()
 	{
-		int brewLocal = 0;
-		for (int i : inventoryItems)
+		brewCount = 0;
+		restCount = 0;
+
+		for (int itemId : inventoryItems)
 		{
-			PotionType type = PotionType.fromItemId(i);
+			PotionType type = PotionType.fromItemId(itemId);
 			if (type == null)
 				continue;
 
-			boolean inc = type.getRole() == PotionRole.BREW;
-			if (inc)
-				brewLocal++;
+			if (type.getRole() == PotionRole.BREW)
+				brewCount++;
+			else if (type.getRole() == PotionRole.RESTORE)
+				restCount++;
 		}
-
-		this.brewCount = brewLocal;
-	}
-
-	private void calculateRests()
-	{
-		int restLocal = 0;
-		for (int i : inventoryItems)
-		{
-			PotionType type = PotionType.fromItemId(i);
-			if (type == null)
-				continue;
-
-			boolean inc = type.getRole() == PotionRole.RESTORE;
-			if (inc)
-				restLocal++;
-		}
-
-		restCount = restLocal;
 	}
 }

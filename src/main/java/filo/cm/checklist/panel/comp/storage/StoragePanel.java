@@ -287,8 +287,8 @@ public class StoragePanel extends JPanel
 
         elevatorPanel.setFloor(template.getPlayerFloor());
 
-        equipmentPanel.loadFromSetup(template, setup);
-        inventoryPanel.loadFromSetup(template, setup);
+        equipmentPanel.build(template, setup);
+        inventoryPanel.build(template, setup);
         depositPanel.loadFromSetup(template, setup);
         withdrawPanel.loadFromSetup(template, setup);
 

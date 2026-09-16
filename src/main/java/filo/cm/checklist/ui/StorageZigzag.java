@@ -66,7 +66,7 @@ public class StorageZigzag {
         if (config.zigzag() && config.zigzagEquipment() && !matchedEquipmentIndex.isEmpty())
         {
             claimedIndexes.addAll(matchedEquipmentIndex);
-            layoutWidgets(availableWidgets, matchedEquipmentIndex, rowOffset);
+            layoutWidgets(matchedEquipmentIndex, rowOffset);
             rowOffset += 2;
         }
 
@@ -79,7 +79,7 @@ public class StorageZigzag {
        if (config.zigzag() && config.zigzagInventory() && !matchedInventoryIndexes.isEmpty())
        {
            claimedIndexes.addAll(matchedInventoryIndexes);
-           layoutWidgets(availableWidgets, matchedInventoryIndexes, rowOffset);
+           layoutWidgets(matchedInventoryIndexes, rowOffset);
            rowOffset += 4;
        }
        else
@@ -342,7 +342,7 @@ public class StorageZigzag {
         }
     }
 
-    private void layoutWidgets(List<Widget> availableWidgets, List<Integer> widgetIndexes, int rowOffset)
+    private void layoutWidgets(List<Integer> widgetIndexes, int rowOffset)
     {
         List<Widget> allWidgets = getStorageWidgets();
 
@@ -386,7 +386,7 @@ public class StorageZigzag {
         widget.revalidate();
     }
 
-    public boolean slotMatches(int itemId, int requiredId)
+    public boolean slotMatches(int requiredId, int itemId)
     {
         if (itemId == requiredId)
             return true;
@@ -400,25 +400,6 @@ public class StorageZigzag {
     {
         PotionType type = PotionType.fromItemId(itemId);
         return type != null && type.getRole() == role;
-    }
-
-    private boolean isBrew(int reqId)
-    {
-        PotionType type = PotionType.fromItemId(reqId);
-
-        return type == PotionType.SARADOMIN_BREW
-                || type == PotionType.XERICS_AID_STRONG
-                || type == PotionType.XERICS_AID
-                || type == PotionType.XERICS_AID_WEAK;
-    }
-
-    private boolean isRestore(int reqId)
-    {
-        PotionType type = PotionType.fromItemId(reqId);
-        return type == PotionType.SUPER_RESTORE
-                || type == PotionType.REVITALISATION_STRONG
-                || type == PotionType.REVITALISATION
-                || type == PotionType.REVITALISATION_WEAK;
     }
 
     private int matchScore(int requiredId, int widgetId)

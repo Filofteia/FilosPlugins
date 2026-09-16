@@ -16,14 +16,13 @@ import java.awt.event.MouseEvent;
 import javax.swing.*;
 import javax.swing.border.MatteBorder;
 import lombok.Getter;
-import lombok.Setter;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.util.SwingUtil;
 
 public class FloorLayoutPanel extends JPanel
 {
-	@Getter	@Setter	private int currentFloor = 3;
-	private final int MAX_FLOOR = 3;
+	@Getter	private int currentFloor = 3;
+	private static final int MAX_FLOOR = 3;
 
 	private final CMChecklistPlugin plugin;
 	private final CMChecklistConfig config;
@@ -107,10 +106,7 @@ public class FloorLayoutPanel extends JPanel
 			return;
 
 		currentFloor++;
-		SwingUtil.fastRemoveAll(this);
-		loadFloorLayout(currentFloor);
-		revalidate();
-		repaint();
+		rebuildFloor();
 	}
 
 	public void decrementFloor()
@@ -119,15 +115,17 @@ public class FloorLayoutPanel extends JPanel
 			return;
 
 		currentFloor--;
-		SwingUtil.fastRemoveAll(this);
-		loadFloorLayout(currentFloor);
-		revalidate();
-		repaint();
+		rebuildFloor();
 	}
 
 	public void resetFloor()
 	{
 		currentFloor = MAX_FLOOR;
+		rebuildFloor();
+	}
+
+	private void rebuildFloor()
+	{
 		SwingUtil.fastRemoveAll(this);
 		loadFloorLayout(currentFloor);
 		revalidate();
@@ -141,15 +139,9 @@ public class FloorLayoutPanel extends JPanel
 		CMLayout[] floorLayout = CMLayout.getByFloor(floorIdx);
 
 		if (floorIdx == 0)
-		{
 			setLayout(new GridLayout(1, 1, 10, 10));
-			setOpaque(false);
-		}
 		else
-		{
 			setLayout(new GridLayout(2, 4, 10, 10));
-			setOpaque(false);
-		}
 
 		for (CMLayout room : floorLayout)
 		{

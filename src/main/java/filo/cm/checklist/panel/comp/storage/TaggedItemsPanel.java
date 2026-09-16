@@ -6,7 +6,7 @@ import java.util.List;
 import javax.swing.*;
 import javax.swing.border.MatteBorder;
 import filo.cm.checklist.data.InstanceTemplate;
-import filo.cm.checklist.data.ItemBoxType;
+import filo.cm.checklist.data.ItemType;
 import filo.cm.checklist.data.save.RoomSetup;
 import filo.cm.checklist.util.ItemBoxFactory;
 import filo.cm.checklist.util.SaveManager;
@@ -61,7 +61,7 @@ public class TaggedItemsPanel extends JPanel
 		setLayout(new GridLayout(rows, 4, 2, 2));
 		for (int i = 0; i < rows * 4; i++)
 		{
-			ItemBoxType type = isDeposit ? ItemBoxType.DEPOSIT : ItemBoxType.WITHDRAW;
+			ItemType type = isDeposit ? ItemType.DEPOSIT : ItemType.WITHDRAW;
 			ItemBox itemBox = itemBoxFactory.createItemBox(i, type, template, this::refreshCallback);
 
 			if (i < itemCount)

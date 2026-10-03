@@ -39,6 +39,9 @@ The plugin can rearrange your private storage iinto a zigzag layout or highlight
 - Withdraw order
 
 # Changes:
+### Update V1.2 (03/10/2026)
+- Added 'Full' layout support
+
 ### Update V1.1 (03/10/2026)
 - Updated Panel UI (Better refresh)
 - Added 'Highlight Potions' config option

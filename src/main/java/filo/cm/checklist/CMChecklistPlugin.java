@@ -45,8 +45,10 @@ import filo.cm.checklist.ui.StorageZigzag;
 import filo.cm.checklist.util.ItemBoxFactory;
 import filo.cm.checklist.util.SaveManager;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
+import net.runelite.api.InstanceTemplates;
 import net.runelite.api.Item;
 import net.runelite.api.ItemContainer;
 import net.runelite.api.MenuAction;
@@ -74,6 +76,7 @@ import net.runelite.client.ui.NavigationButton;
 import net.runelite.client.ui.overlay.OverlayManager;
 import net.runelite.client.util.ImageUtil;
 
+@Slf4j
 @PluginDescriptor(
 	name = "CM Storage Presets",
 		description = "An Inventory Setup equivalent for Challenge Mode CoX",
@@ -103,7 +106,9 @@ public class CMChecklistPlugin extends Plugin {
 	@Getter	private RoomSetup activeRoomSetup = null;
 	@Getter	private InstanceTemplate activeTemplate = null;
 
-	private boolean isChallengeMode = false;
+	//todo: check if this works in small, large, and team relogs (start, end) and if it works across all floors.
+	private boolean pendingRaidCheck = false;
+	private boolean isFullRaid = false;	// CM and Full
 	private boolean inRaid = false;
 
 	private final int[] CHEST_OBJ_IDS = {29769, 29770, 29779, 29780, 37978};
@@ -131,7 +136,7 @@ public class CMChecklistPlugin extends Plugin {
 			if (client.getGameState() != GameState.LOGGED_IN)
 				return;
 
-			isChallengeMode = client.getVarbitValue(VarbitID.RAIDS_CHALLENGE_MODE) > 0;
+			isFullRaid = isAcceptedRaid();
 			inRaid = client.getVarbitValue(VarbitID.RAIDS_CLIENT_INDUNGEON) > 0;
 		});
 	}
@@ -149,7 +154,7 @@ public class CMChecklistPlugin extends Plugin {
 		pluginPanel = null;
 		mismatchedItems.clear();
 		overlay.reset();
-		isChallengeMode = false;
+		isFullRaid = false;
 		inRaid = false;
 	}
 
@@ -166,10 +171,8 @@ public class CMChecklistPlugin extends Plugin {
 
 	@Subscribe
 	public void onScriptPostFired(ScriptPostFired event) {
-		if (event.getScriptId() == 1607) // 1606 was the original
-		{
+		if (event.getScriptId() == 1607 && isFullRaid)
 			storageZigzag.layout(activeRoomSetup);
-		}
 	}
 
 	@Subscribe
@@ -177,26 +180,21 @@ public class CMChecklistPlugin extends Plugin {
 		overlay.clearIndexes();
 		mismatchedItems.clear();
 
-		if (!inRaid || !isChallengeMode) {
+		if (pendingRaidCheck)
+		{
+			isFullRaid = isAcceptedRaid();
+			pendingRaidCheck = false;
+		}
+
+		if (!inRaid || !isFullRaid) {
 			activeTemplate = null;
 			activeRoomSetup = null;
 			brewContext = null;
 			return;
 		}
 
-		Player localPlayer = client.getLocalPlayer();
-		if (localPlayer == null)
-			return;
-
 		int pPosPlane = client.getTopLevelWorldView().getPlane();
-		int pPosX = localPlayer.getLocalLocation().getSceneX();
-		int pPosY = localPlayer.getLocalLocation().getSceneY();
-
-		WorldView pWorldView = localPlayer.getWorldView();
-		if (pWorldView == null)
-			return;
-
-		int templateId = pWorldView.getInstanceTemplateChunks()[pPosPlane][pPosX / 8][pPosY / 8];
+		int templateId = getTemplateId(-1);
 		InstanceTemplate template = InstanceTemplate.findMatch(templateId, pPosPlane);
 
 		if (activeTemplate != template && config.autoUpdateRoom())
@@ -356,11 +354,41 @@ public class CMChecklistPlugin extends Plugin {
 		final int varbitId = e.getVarbitId();
 		final int varbitValue = e.getValue();
 
-		if (varbitId == VarbitID.RAIDS_CHALLENGE_MODE)
-			isChallengeMode = varbitValue >0;
+		if (varbitId == VarbitID.RAIDS_CLIENT_INDUNGEON) {
+			inRaid = varbitValue > 0;
+			if (inRaid)
+				pendingRaidCheck = true;	// if I check here it's null
+		}
+	}
 
-		if (varbitId == VarbitID.RAIDS_CLIENT_INDUNGEON)
-			inRaid = varbitValue >0;
+	private int getTemplateId(int pPosOverride)
+	{
+		Player localPlayer = client.getLocalPlayer();
+		if (localPlayer == null)
+			return -1;
+
+		int pPosPlane = pPosOverride >= 0 ? pPosOverride : client.getTopLevelWorldView().getPlane();
+		int pPosX = localPlayer.getLocalLocation().getSceneX();
+		int pPosY = localPlayer.getLocalLocation().getSceneY();
+
+		WorldView pWorldView = localPlayer.getWorldView();
+		if (pWorldView == null)
+			return -1;
+
+		return pWorldView.getInstanceTemplateChunks()[pPosPlane][pPosX / 8][pPosY / 8];
+	}
+
+	// kinda hacky but on normal chambers floor 1 isn't real
+	private boolean isAcceptedRaid()
+	{
+		boolean isChallenge = client.getVarbitValue(VarbitID.RAIDS_CHALLENGE_MODE) > 0;
+		if (isChallenge)
+			return true;
+
+		int templateId = getTemplateId(1);
+		InstanceTemplates template = InstanceTemplates.findMatch(templateId);	// using the real templates because it has all
+
+		return template != null;
 	}
 
 	public void requestStoragePanel(RaidSetup setup)

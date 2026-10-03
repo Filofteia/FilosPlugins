@@ -30,6 +30,8 @@ public class StoragePanel extends JPanel
     private final JLabel depositLabel;
     private final JLabel withdrawLabel;
 
+    private static final ImageIcon RESET_ICON;
+    private static final ImageIcon RESET_ICON_HOVERED;
     private static final ImageIcon SETUP_ICON;
     private static final ImageIcon SETUP_ICON_HOVERED;
     private static final ImageIcon BACKPACK_ICON;
@@ -41,10 +43,13 @@ public class StoragePanel extends JPanel
 
     static
     {
+        final BufferedImage resetIcon = ImageUtil.loadImageResource(CMChecklistPlugin.class, "reset.png");
         final BufferedImage setupIcon = ImageUtil.loadImageResource(CMChecklistPlugin.class, "update_all.png");
         final BufferedImage backpackIcon = ImageUtil.loadImageResource(CMChecklistPlugin.class, "backpack.png");
         final BufferedImage equipIcon = ImageUtil.loadImageResource(CMChecklistPlugin.class, "invent.png");
         final BufferedImage exitIcon = ImageUtil.loadImageResource(CMChecklistPlugin.class, "delete_icon.png");
+        RESET_ICON = new ImageIcon(resetIcon);
+        RESET_ICON_HOVERED  = new ImageIcon(ImageUtil.alphaOffset(resetIcon, -220));
         SETUP_ICON = new ImageIcon(setupIcon);
         SETUP_ICON_HOVERED  = new ImageIcon(ImageUtil.alphaOffset(setupIcon, -220));
         BACKPACK_ICON = new ImageIcon(backpackIcon);
@@ -94,19 +99,31 @@ public class StoragePanel extends JPanel
         JLabel setupName = new JLabel("Setup Name");
 
         RaidSetup setup = saveManager.getActiveSetup();
-        if (setup != null)
+        if (setup != null) {
             setupName.setText(setup.getName());
+            setupName.setToolTipText(setup.getName()); // long names
+        }
 
-        RoomSetup roomSetup = saveManager.getRoom(template); // null is fine for ppanels + savemanager
-
+        RoomSetup roomSetup = saveManager.getRoom(template);
         setupName.setFont(FontManager.getRunescapeBoldFont());
 
         JPanel headerPanel = new JPanel(new BorderLayout(5, 5));
-
         JPanel headerControlPanel = new JPanel();
         headerControlPanel.setLayout(new BoxLayout(headerControlPanel, BoxLayout.X_AXIS));
 
-        JButton updateAll = createButton(SETUP_ICON, SETUP_ICON_HOVERED, true, () -> {
+        JButton clearRoom = createButton(RESET_ICON, RESET_ICON_HOVERED, true, false, "Clear Room", () -> {
+            if (roomSetup != null)
+            {
+                roomSetup.clearSetup();
+                saveManager.saveActiveSetup();
+
+                build();
+                inventoryPanel.build(template, roomSetup);
+                equipmentPanel.build(template, roomSetup);
+            }
+        });
+
+        JButton updateAll = createButton(SETUP_ICON, SETUP_ICON_HOVERED, true, true, "Update All", () -> {
             saveManager.saveAll(template, saved -> {
                 if (saved) {
                     build();
@@ -123,7 +140,7 @@ public class StoragePanel extends JPanel
             });
         });
 
-        JButton updateInventory = createButton(BACKPACK_ICON, BACKPACK_ICON_HOVERED, true, () -> {
+        JButton updateInventory = createButton(BACKPACK_ICON, BACKPACK_ICON_HOVERED, true, true, "Update Inventory", () -> {
             saveManager.saveInventory(template, saved -> {
                 if (saved) {
                     build();
@@ -139,7 +156,7 @@ public class StoragePanel extends JPanel
             });
         });
 
-        JButton updateEquipment = createButton(EQUIP_ICON, EQUIP_ICON_HOVERED, true, () -> {
+        JButton updateEquipment = createButton(EQUIP_ICON, EQUIP_ICON_HOVERED, true, true, "Update Equipment", () -> {
             saveManager.saveEquipment(template, saved -> {
                 if (saved)
                 {
@@ -156,13 +173,14 @@ public class StoragePanel extends JPanel
             });
         });
 
-        JButton exitPreset = createButton(EXIT_ICON, EXIT_ICON_HOVERED, false, () -> {
+        JButton exitPreset = createButton(EXIT_ICON, EXIT_ICON_HOVERED, false, false, "Exit", () -> {
             closeSetup();
             elevatorPanel.build();
             plugin.requestClosePreset();
             saveManager.setActiveSetup(null);
         });
 
+        headerControlPanel.add(clearRoom);
         headerControlPanel.add(updateAll);
         headerControlPanel.add(updateInventory);
         headerControlPanel.add(updateEquipment);
@@ -173,24 +191,27 @@ public class StoragePanel extends JPanel
         return headerPanel;
     }
 
-    private JButton createButton(ImageIcon icon, ImageIcon hover, boolean needLogin, Runnable runnable)
+    private JButton createButton(ImageIcon icon, ImageIcon hover, boolean needConfirm, boolean needLogin, String tooltip, Runnable runnable)
     {
         JButton button = new JButton(icon);
         button.setRolloverIcon(hover);
+        button.setToolTipText(tooltip);
         button.setOpaque(true);
         button.setPreferredSize(new Dimension(20, 20));
-        if (needLogin)
-            addListener(button, runnable);
+
+        if (needLogin || needConfirm)
+            addListener(button, runnable, needLogin);
         else
             button.addActionListener(e -> runnable.run());
+
         SwingUtil.removeButtonDecorations(button);
         return button;
     }
 
-    private void addListener(JButton button, Runnable action)
+    private void addListener(JButton button, Runnable action, boolean needLogin)
     {
         button.addActionListener(e -> {
-            if (saveManager.loggedOut())
+            if (saveManager.loggedOut() && needLogin)
             {
                 JOptionPane.showMessageDialog(
                         null,
@@ -241,7 +262,7 @@ public class StoragePanel extends JPanel
             PluginErrorPanel errorPanel = new PluginErrorPanel();
             errorPanel.setContent(
                     "No room selected",
-                    "Select a room from the above panel, and the setup will be loaded here."
+                    "Select a room from the above panel and the setup will be loaded here."
             );
             addCenteredComp(errorPanel);
 

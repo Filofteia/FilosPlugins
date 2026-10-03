@@ -7,6 +7,7 @@ import javax.swing.border.EmptyBorder;
 import filo.cm.checklist.data.InstanceTemplate;
 import filo.cm.checklist.data.ItemType;
 import filo.cm.checklist.util.SaveManager;
+import lombok.Setter;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
 import net.runelite.api.Item;
@@ -27,8 +28,9 @@ public class ItemBox extends JPanel
 	private final Client client;
 	private final SaveManager saveManager;
 	private final ItemManager itemManager;
-	private final InstanceTemplate template;
 	private final Runnable refresh;
+
+	@Setter private InstanceTemplate template;
 
 	public ItemBox(ClientThread clientThread,
 				   Client client,
@@ -61,8 +63,8 @@ public class ItemBox extends JPanel
 		setBackground(ColorScheme.DARKER_GRAY_COLOR);
 		add(itemLabel, BorderLayout.CENTER);
 
-		if (template != null)
-			addPopupMenu(idx, type);
+
+		addPopupMenu(idx, type);
 	}
 
 	public void setItemById(int itemId)
@@ -127,7 +129,22 @@ public class ItemBox extends JPanel
 
 	private void updateFromInventory(int idx, ItemType type)
 	{
+		if (template == null)
+			return;
+
 		clientThread.invokeLater(() -> {
+			if (saveManager.loggedOut())
+			{
+				SwingUtilities.invokeLater(() ->
+						JOptionPane.showMessageDialog(
+								this,
+								"You must be logged in to search for items."
+						)
+				);
+
+				return;
+			}
+
 			boolean isInventory = type == ItemType.INVENTORY;
 			ItemContainer itemContainer = client.getItemContainer(isInventory ? InventoryID.INV : InventoryID.WORN);
 
@@ -165,8 +182,11 @@ public class ItemBox extends JPanel
 
 	private void searchForItem(int idx, ItemType type)
 	{
+		if (template == null)
+			return;
+
 		clientThread.invokeLater(() -> {
-			if (client.getGameState() != GameState.LOGGED_IN)
+			if (saveManager.loggedOut())
 			{
 				SwingUtilities.invokeLater(() ->
 						JOptionPane.showMessageDialog(
@@ -179,7 +199,7 @@ public class ItemBox extends JPanel
 			}
 
 			chatboxItemSearch
-					.tooltipText("Change Item ():")
+					.tooltipText("Change Item:")
 					.onItemSelected((itemId) ->
 					{
 						saveManager.updateItem(
@@ -206,6 +226,9 @@ public class ItemBox extends JPanel
 
 	private void removeItem(int idx, ItemType type)
 	{
+		if (template == null)
+			return;
+
 		clientThread.invokeLater(() ->
 		{
 			saveManager.updateItem(

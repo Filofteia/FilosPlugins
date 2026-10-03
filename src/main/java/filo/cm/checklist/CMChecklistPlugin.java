@@ -52,7 +52,6 @@ import net.runelite.api.ItemContainer;
 import net.runelite.api.MenuAction;
 import net.runelite.api.MenuEntry;
 import net.runelite.api.Player;
-import net.runelite.api.ScriptID;
 import net.runelite.api.WorldView;
 import net.runelite.api.events.GameTick;
 import net.runelite.api.events.MenuEntryAdded;
@@ -66,7 +65,6 @@ import net.runelite.api.widgets.Widget;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
-import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.game.chatbox.ChatboxItemSearch;
 import net.runelite.client.plugins.Plugin;
@@ -100,6 +98,7 @@ public class CMChecklistPlugin extends Plugin {
 	private SaveManager saveManager;
 
 	private StorageZigzag storageZigzag;
+	private final List<Integer> mismatchedItems = new ArrayList<>();
 	@Getter	private BrewContext brewContext = null;
 	@Getter	private RoomSetup activeRoomSetup = null;
 	@Getter	private InstanceTemplate activeTemplate = null;
@@ -120,7 +119,7 @@ public class CMChecklistPlugin extends Plugin {
 
 		BufferedImage icon = ImageUtil.loadImageResource(CMChecklistPlugin.class, "icon.png");
 		panelButton = NavigationButton.builder()
-				.tooltip("CM Preset Panel")
+				.tooltip("CM Storage Presets")
 				.panel(pluginPanel)
 				.icon(icon)
 				.priority(10)
@@ -148,6 +147,8 @@ public class CMChecklistPlugin extends Plugin {
 		panelButton = null;
 		saveManager = null;
 		pluginPanel = null;
+		mismatchedItems.clear();
+		overlay.reset();
 		isChallengeMode = false;
 		inRaid = false;
 	}
@@ -171,7 +172,6 @@ public class CMChecklistPlugin extends Plugin {
 		}
 	}
 
-	private final List<Integer> mismatchedItems = new ArrayList<>();
 	@Subscribe
 	public void onGameTick(GameTick gameTick) {
 		overlay.clearIndexes();
@@ -228,7 +228,7 @@ public class CMChecklistPlugin extends Plugin {
 			}
 		}
 
-		overlay.updateMismatchedItems(mismatchedItems);
+		overlay.setMismatchedItems(mismatchedItems);
 	}
 
 	@Subscribe
@@ -380,7 +380,7 @@ public class CMChecklistPlugin extends Plugin {
 
 	public void sendInventoryWidgets(List<Integer> inventoryWidgets)
 	{
-		overlay.updateInventoryItems(inventoryWidgets);
+		overlay.setItemIndexes(inventoryWidgets);
 	}
 
 	@Provides

@@ -450,7 +450,6 @@ public class StorageZigzag {
     {
         for (int index : indexes)
         {
-
             if (claimedIndexes.contains(index))
                 continue;
 
@@ -467,6 +466,7 @@ public class StorageZigzag {
                         firstSlotEmpty = entry.getKey();
                 }
             }
+
             if (firstSlotEmpty == Integer.MAX_VALUE)
             {
                 firstSlotEmpty = indexMap.keySet().stream()

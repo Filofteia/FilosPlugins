@@ -74,16 +74,16 @@ public class PresetEntry extends JPanel
         leftPanel.setComponentPopupMenu(menu);
         setComponentPopupMenu(menu);
 
-        editNameButton = createButton(RENAME_PRESET, RENAME_PRESET_HOVERED, () -> {
+        editNameButton = createButton(RENAME_PRESET, RENAME_PRESET_HOVERED, "Rename Preset", () -> {
             showRenameField(setup);
         });
 
-        openPresetButton = createButton(OPEN_PRESET, OPEN_PRESET_HOVERED, () -> {
+        openPresetButton = createButton(OPEN_PRESET, OPEN_PRESET_HOVERED, "Open Preset", () -> {
             cancel(setup);
             plugin.requestStoragePanel(setup);
         });
 
-        deletePresetButton = createButton(DELETE_PRESET, DELETE_PRESET_HOVERED, () -> {
+        deletePresetButton = createButton(DELETE_PRESET, DELETE_PRESET_HOVERED, "Delete Preset", () -> {
             plugin.requestDeletePreset(setup);
         });
 
@@ -98,10 +98,11 @@ public class PresetEntry extends JPanel
         add(leftPanel, BorderLayout.CENTER);
     }
 
-    private JButton createButton(ImageIcon icon, ImageIcon hovered, Runnable runnable)
+    private JButton createButton(ImageIcon icon, ImageIcon hovered, String tooltip, Runnable runnable)
     {
         JButton button = new JButton(icon);
         button.setRolloverIcon(hovered);
+        button.setToolTipText(tooltip);
         button.setPreferredSize(new Dimension(16, 16));
         button.setOpaque(true);
         button.addActionListener(e -> runnable.run());

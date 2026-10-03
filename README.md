@@ -17,6 +17,7 @@ The plugin can rearrange your private storage iinto a zigzag layout or highlight
 - **Highlight Equipment**: Highlights equipment from your preset that you haven't equipped.
 - **Highlight Inventory**: Highlights items from your preset that are in your private storage.
 - **Highlight Withdraw / Deposit**: Highlights items that you have marked in your setup.
+- **Highlight Potions**: Highlights potions in your inventory or storage to help match the quantity in your setup
 - **Ghost Outlines**: Toggles outlines on ghost items in your private storage.
 
 ## ZigZag Settings
@@ -30,6 +31,18 @@ The plugin can rearrange your private storage iinto a zigzag layout or highlight
 - Player Location on the UI
 - Prevent Olm entry on left-click without an exact preset.
 - Restore Auto-Scroll in private storage if using ZigZag.
+- Auto-refresh on config change
+- Highlight to Drop (All Rooms)
+- Highlight Dropped Items
+- Anti-drag
+- 'Full' layout support
+- Withdraw order
+
+# Changes:
+### Update V1.1 (03/10/2026)
+- Updated Panel UI (Better refresh)
+- Added 'Highlight Potions' config option
+- Changed 'Highlight Withdraw / Deposit' to a dropdown with 'Always | Interface | Never'
 
 # Known Issues:
 Not seen any yet, but I'm certain the UI will give out first.

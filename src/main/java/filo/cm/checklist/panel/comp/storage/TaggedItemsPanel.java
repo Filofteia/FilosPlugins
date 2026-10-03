@@ -10,7 +10,6 @@ import filo.cm.checklist.data.ItemType;
 import filo.cm.checklist.data.save.RoomSetup;
 import filo.cm.checklist.util.ItemBoxFactory;
 import filo.cm.checklist.util.SaveManager;
-import net.runelite.client.util.SwingUtil;
 
 public class TaggedItemsPanel extends JPanel
 {
@@ -19,6 +18,7 @@ public class TaggedItemsPanel extends JPanel
 	private final ItemBoxFactory itemBoxFactory;
 	private InstanceTemplate template;
 
+	private final List<ItemBox> itemBoxes = new ArrayList<>();
 	public TaggedItemsPanel(
 			SaveManager saveManager,
 			ItemBoxFactory itemBoxFactory,
@@ -31,7 +31,10 @@ public class TaggedItemsPanel extends JPanel
 		this.itemBoxFactory = itemBoxFactory;
 		this.template = template;
 
-		setBorder(new MatteBorder(1, 1, 1, 1, isDeposit ? Color.RED : Color.GREEN));
+		Color redColour = new Color(147, 46, 46);
+		Color greenColour = new Color(46, 147, 54);
+		setBorder(new MatteBorder(1, 1, 1, 1, isDeposit ? redColour : greenColour));
+		addRows(1);
 		build(template, null);
 	}
 
@@ -53,24 +56,60 @@ public class TaggedItemsPanel extends JPanel
 
 	private void build(InstanceTemplate template, RoomSetup setup)
 	{
-		SwingUtil.fastRemoveAll(this);
-		List<Integer> itemIds = setup == null ? new ArrayList<>() : getTaggedItems(setup);
+		List<Integer> itemIds = getTaggedItems(setup);
 		int itemCount = itemIds.size();
 		int rows = itemCount / 4 + 1;
+		int uiRows = itemBoxes.size() / 4;
 
-		setLayout(new GridLayout(rows, 4, 2, 2));
-		for (int i = 0; i < rows * 4; i++)
+		int rowDiff = Math.abs(rows - uiRows);
+		boolean uiRefresh = uiRows != rows;
+		if (uiRefresh)
 		{
-			ItemType type = isDeposit ? ItemType.DEPOSIT : ItemType.WITHDRAW;
-			ItemBox itemBox = itemBoxFactory.createItemBox(i, type, template, this::refreshCallback);
+			if (rows > uiRows)	// fix for multiple rows.
+				addRows(rowDiff);
+			else
+				deleteRows(rowDiff);
+		}
 
-			if (i < itemCount)
-				itemBox.setItemById(itemIds.get(i));
+		setLayout(new GridLayout(0, 4, 2, 2));
+		for (int i = 0; i < itemBoxes.size(); i++)
+		{
+			ItemBox itemBox = itemBoxes.get(i);
+			int itemId = itemIds.size() > i ? itemIds.get(i) : 0;
 
-			add(itemBox);
+			itemBox.setTemplate(template);
+			itemBox.setItemById(itemId);
 		}
 
 		setMaximumSize(getPreferredSize());
+	}
+
+	private void addRows(int rows)
+	{
+		ItemType type = isDeposit ? ItemType.DEPOSIT : ItemType.WITHDRAW;
+		for (int i = 0; i < rows * 4; i++)
+		{
+			ItemBox itemBox = itemBoxFactory.createItemBox(itemBoxes.size(), type, template, this::refreshCallback);
+			itemBoxes.add(itemBox);
+			add(itemBox);
+		}
+	}
+
+	private void deleteRows(int rows)
+	{
+		if (itemBoxes.isEmpty())
+			return;
+
+		if (rows * 4 > itemBoxes.size())
+			return;
+
+		int itemSize = itemBoxes.size() - 1;
+		for (int i = 0; i < rows * 4; i++)
+		{
+			ItemBox itemBox = itemBoxes.get(itemSize - i);
+			remove(itemBox);
+			itemBoxes.remove(itemSize - i);
+		}
 	}
 
 	private void refreshCallback()

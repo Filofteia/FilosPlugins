@@ -6,5 +6,6 @@ public enum PotionRole {
     OVERLOAD,
     ENHANCE,
     POISON,
+    STAMINA,
     OTHER
 }

@@ -6,14 +6,12 @@ import filo.cm.checklist.data.InstanceTemplate;
 import filo.cm.checklist.data.ItemType;
 import filo.cm.checklist.data.save.RoomSetup;
 import filo.cm.checklist.util.ItemBoxFactory;
-import net.runelite.client.util.SwingUtil;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class EquipmentPanel extends JPanel
 {
-	// {-1, -1} is null entries, usually like jaw slot or something to skip making box
 	private static final int[][] BOX_COORD =
 			{
 					{1, 0},
@@ -24,15 +22,28 @@ public class EquipmentPanel extends JPanel
 					{-1, -1},
 					{0, 4}, {1, 4}, {-1, -1}, {2, 4}, {2, 1}
 			};
-
-	private final ItemBoxFactory itemBoxFactory;
+	private final ItemBox[] itemBoxes = new ItemBox[BOX_COORD.length];
 
 	public EquipmentPanel(ItemBoxFactory itemBoxFactory, InstanceTemplate template)
 	{
-		this.itemBoxFactory = itemBoxFactory;
-
 		setLayout(new GridBagLayout());
 		setBorder(new EmptyBorder(2, 30, 2, 30));
+
+		GridBagConstraints gbc = new GridBagConstraints();
+		gbc.insets = new Insets(1,1,1,1);
+
+        for (int i = 0; i < BOX_COORD.length; i++) {
+            int boxX = BOX_COORD[i][0];
+            int boxY = BOX_COORD[i][1];
+            if (boxX == -1 || boxY == -1)
+                continue;
+
+            gbc.gridx = boxX;
+            gbc.gridy = boxY;
+
+            itemBoxes[i] = itemBoxFactory.createItemBox(i, ItemType.EQUIPMENT, null);
+            add(itemBoxes[i], gbc);
+        }
 
 		build(template, null);
 	}
@@ -40,26 +51,14 @@ public class EquipmentPanel extends JPanel
 	public void build(InstanceTemplate template, RoomSetup setup)
 	{
 		List<Integer> equipmentIds = setup != null ? setup.getEquippedItems() : new ArrayList<>();
-		SwingUtil.fastRemoveAll(this);
 
-		GridBagConstraints gbc = new GridBagConstraints();
-		gbc.insets = new Insets(1,1,1,1);
-
-		for (int i = 0; i < BOX_COORD.length; i++)
-		{
-			int boxX = BOX_COORD[i][0];
-			int boxY = BOX_COORD[i][1];
-			if (boxX == -1 || boxY == -1)
+        for (int i = 0; i < itemBoxes.length; i++) {
+			ItemBox itemBox = itemBoxes[i];
+			if (itemBox == null)
 				continue;
 
-			gbc.gridx = boxX;
-			gbc.gridy = boxY;
-			ItemBox itemBox = itemBoxFactory.createItemBox(i, ItemType.EQUIPMENT, template);
-
-			if (i < equipmentIds.size())
-				itemBox.setItemById(equipmentIds.get(i));
-
-			add(itemBox, gbc);
-		}
+            itemBox.setTemplate(template);
+			itemBox.setItemById(i < equipmentIds.size() ? equipmentIds.get(i) : 0);
+        }
 	}
 }

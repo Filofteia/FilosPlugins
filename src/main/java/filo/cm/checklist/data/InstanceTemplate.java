@@ -37,17 +37,17 @@ public enum InstanceTemplate
 
 	// F3
 	RAIDS_ICE_DEMON_F3(3296, 5344, 0, 32, 32, 3, "Ice Demon"),
-	RAIDS_FARMING_F3(3328, 5440, 1, 32, 32, 3, "Farming (F3)"),
-	RAIDS_END_F3(3264, 5152, 0, 32, 32, 3, "End (F3)"),
+	RAIDS_FARMING_F3(3328, 5440, 1, 32, 32, 3, "Farming (Floor 3)"),
+	RAIDS_END_F3(3264, 5152, 0, 32, 32, 3, "End (Floor 3)"),
 
 	// F2
 	RAIDS_THIEVING_F2(3296, 5376, 0, 32, 32, 2, "Thieving"),
-	RAIDS_FARMING_F2(3296, 5440, 0, 32, 32, 2, "Farming (F2)"),
-	RAIDS_END_F2(3264, 5120, 0, 32, 32, 2, "End (F2)"),
+	RAIDS_FARMING_F2(3296, 5440, 0, 32, 32, 2, "Farming (Floor 2)"),
+	RAIDS_END_F2(3264, 5120, 0, 32, 32, 2, "End (Floor 2)"),
 
 	// F1
-	RAIDS_FARMING_F1(3296, 5440, 1, 32, 32, 1, "Farming (F1)"),
-	RAIDS_END_F1(3296, 5152, 0, 32, 32, 1, "End (F1)"),
+	RAIDS_FARMING_F1(3296, 5440, 1, 32, 32, 1, "Farming (Floor 1)"),
+	RAIDS_END_F1(3296, 5152, 0, 32, 32, 1, "End (Floor 1)"),
 
 	// F0
 	RAIDS_OLM_F0(3224, 5712, 0, 16, 16, 0, "Olm");

@@ -2,6 +2,7 @@ package filo.cm.checklist;
 
 import java.awt.Color;
 
+import filo.cm.checklist.config.HighlightType;
 import net.runelite.client.config.Alpha;
 import net.runelite.client.config.Config;
 import net.runelite.client.config.ConfigGroup;
@@ -98,7 +99,7 @@ public interface CMChecklistConfig extends Config
 	)
 	default boolean standardPots()
 	{
-		return false;
+		return true;
 	}
 	//endregion
 	//region Highlights
@@ -111,7 +112,7 @@ public interface CMChecklistConfig extends Config
 	)
 	default boolean highlightMismatched()
 	{
-		return true;
+		return false;
 	}
 
 	@ConfigItem(
@@ -201,9 +202,9 @@ public interface CMChecklistConfig extends Config
 			section = highlightSettings,
 			position = 8
 	)
-	default boolean highlightDeposit()
+	default HighlightType highlightDeposit()
 	{
-		return true;
+		return HighlightType.ALWAYS;
 	}
 	@ConfigItem(
 			keyName = "depositColour",
@@ -218,11 +219,23 @@ public interface CMChecklistConfig extends Config
 	}
 
 	@ConfigItem(
+			keyName = "highlightPotions",
+			name = "Highlight Potions",
+			description = "Highlights potions in your inventory or storage to help match the quantity in your setup",
+			section = highlightSettings,
+			position = 10
+	)
+	default boolean highlightPotions()
+	{
+		return true;
+	}
+
+	@ConfigItem(
 			keyName = "ghostOutline",
 			name = "Ghost Outline",
 			description = "Toggles outlines on ghost items in your private storage",
 			section = highlightSettings,
-			position = 10
+			position = 11
 	)
 	default boolean ghostOutline()
 	{
@@ -234,7 +247,7 @@ public interface CMChecklistConfig extends Config
 			name = "Ghost Colour",
 			description = "Colour for your ghost highlight",
 			section = highlightSettings,
-			position = 11
+			position = 12
 	)
 	default Color ghostColour()
 	{

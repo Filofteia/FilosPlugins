@@ -120,6 +120,12 @@ public class SaveManager {
         configManager.setConfiguration(GROUP_KEY, uuid.toString(), uuidSetupJson);
     }
 
+    // activeSetup has a getter, but this looks cleaner
+    public void saveActiveSetup()
+    {
+        saveByUUID(activeSetup);
+    }
+
     public boolean deleteByUUID(UUID uuid)
     {
         boolean removed = uuidKeyList.remove(uuid);
@@ -154,7 +160,6 @@ public class SaveManager {
         saveIndexList();
         saveByUUID(setup);
     }
-
 
     public void createSetup(String name)
     {

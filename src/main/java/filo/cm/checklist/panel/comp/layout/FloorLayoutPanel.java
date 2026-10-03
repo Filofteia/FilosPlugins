@@ -162,19 +162,6 @@ public class FloorLayoutPanel extends JPanel
 				roomBtn.addMouseListener(new MouseAdapter()
 				{
 					@Override
-					public void mouseClicked(MouseEvent e)
-					{
-						super.mouseClicked(e);
-						if (e.getButton() == MouseEvent.BUTTON1)
-						{
-							if (room.getInstanceTemplate() != null)
-							{
-								plugin.requestLoadPreset(room.getInstanceTemplate());
-							}
-						}
-					}
-;
-					@Override
 					public void mousePressed(MouseEvent e)
 					{
 						super.mousePressed(e);
@@ -185,6 +172,14 @@ public class FloorLayoutPanel extends JPanel
 					public void mouseReleased(MouseEvent e)
 					{
 						super.mouseReleased(e);
+						if (e.getButton() == MouseEvent.BUTTON1)
+						{
+							if (room.getInstanceTemplate() != null)
+							{
+								plugin.requestLoadPreset(room.getInstanceTemplate());
+							}
+						}
+
 						roomBtn.setBackground(ColorScheme.DARK_GRAY_COLOR);
 					}
 
@@ -216,7 +211,7 @@ public class FloorLayoutPanel extends JPanel
 
 	private Color getRoomColour(CMLayout room, int roomIndex)
 	{
-		if (roomIndex == 7)	// End first, as it always has storage
+		if (roomIndex == 7)
 			return config.endRoomColour();
 
 		if (room.isHasStorage())

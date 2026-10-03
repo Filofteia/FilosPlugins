@@ -61,7 +61,7 @@ public class PresetPanel extends JPanel
         JPanel headerPanel = new JPanel(new BorderLayout());
         JPanel buttonPanel = new JPanel(new BorderLayout());
 
-        JButton createButton = createButton(ADD_ICON, ADD_ICON_HOVERED, () -> {
+        JButton createButton = createButton(ADD_ICON, ADD_ICON_HOVERED, "Create Preset", () -> {
             String name = JOptionPane.showInputDialog("Enter a name for the new setup:");
             if (name != null && !name.isEmpty())
             {
@@ -70,7 +70,7 @@ public class PresetPanel extends JPanel
             }
         });
 
-        JButton importButton = createButton(ADD_IMPORT, ADD_IMPORT_HOVERED, () -> {
+        JButton importButton = createButton(ADD_IMPORT, ADD_IMPORT_HOVERED, "Import Preset", () -> {
             RaidSetup importedSetup = requestClipboardSetup();
             if (importedSetup == null)
                 return;
@@ -150,10 +150,11 @@ public class PresetPanel extends JPanel
                 .collect(Collectors.toList());
     }
 
-    private JButton createButton(ImageIcon icon, ImageIcon hover, Runnable runnable)
+    private JButton createButton(ImageIcon icon, ImageIcon hover, String tooltip, Runnable runnable)
     {
         JButton button = new JButton(icon);
         button.setRolloverIcon(hover);
+        button.setToolTipText(tooltip);
         button.setPreferredSize(new Dimension(20, 20));
         button.setOpaque(true);
         button.addActionListener(e -> runnable.run());

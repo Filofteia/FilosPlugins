@@ -2,6 +2,7 @@ package filo.cm.checklist.overlay;
 
 import filo.cm.checklist.CMChecklistConfig;
 import filo.cm.checklist.CMChecklistPlugin;
+import filo.cm.checklist.config.HighlightType;
 import filo.cm.checklist.data.BrewContext;
 import filo.cm.checklist.data.PotionRole;
 import filo.cm.checklist.data.save.RoomSetup;
@@ -13,6 +14,8 @@ import java.util.ArrayList;
 import javax.inject.Inject;
 
 import filo.cm.checklist.util.PotionUtil;
+import lombok.Setter;
+import net.runelite.api.annotations.Interface;
 import net.runelite.api.gameval.InterfaceID;
 import net.runelite.api.widgets.WidgetItem;
 import net.runelite.client.game.ItemManager;
@@ -25,6 +28,12 @@ public class ItemHighlights extends WidgetItemOverlay
 	private final CMChecklistPlugin plugin;
 	private final CMChecklistConfig config;
 	private final ItemManager itemManager;
+	private BrewContext brewContext;
+
+	@Setter	private List<Integer> mismatchedItems = new ArrayList<>();
+	@Setter	private List<Integer> itemIndexes = new ArrayList<>();
+	private int restoreRenders;
+	private int brewRenders;
 
 	@Inject
 	ItemHighlights(CMChecklistPlugin plugin, CMChecklistConfig config, ItemManager itemManager)
@@ -39,7 +48,6 @@ public class ItemHighlights extends WidgetItemOverlay
 		);
 	}
 
-	private BrewContext brewContext;
 	@Override
 	public Dimension render(Graphics2D graphics)
 	{
@@ -53,9 +61,6 @@ public class ItemHighlights extends WidgetItemOverlay
 		return super.render(graphics);
 	}
 
-	private List<Integer> mismatchedItems = new ArrayList<>();
-	private int restoreRenders;
-	private int brewRenders;
 	@Override
 	public void renderItemOverlay(Graphics2D graphics, int itemId, WidgetItem widgetItem)
 	{
@@ -96,35 +101,39 @@ public class ItemHighlights extends WidgetItemOverlay
 				renderItemOverlay(graphics, itemId, widgetQty, config.inventoryColour(), widgetBounds, true);
 		}
 
-		PotionRole role = PotionUtil.getRole(itemId);
-		if (role == PotionRole.BREW && brewContext != null)
+		// Consider making it still early return, but people may still want to deposit all brews
+		if (config.highlightPotions())
 		{
-			if (brewContext.isSkipRoom())
+			PotionRole role = PotionUtil.getRole(itemId);
+			if (role == PotionRole.BREW && brewContext != null)
+			{
+				if (brewContext.isSkipRoom())
+					return;
+
+				int withdrawQuantity = brewContext.getMissingBrews() - brewRenders;
+				int depositQuantity = brewContext.getSurplusBrews() - brewRenders;
+
+				boolean isRendered = renderPotionWarnings(graphics, withdrawQuantity, depositQuantity, itemId, widgetQty, widgetBounds, containerGroupId);
+				if (isRendered)
+					brewRenders++;
+
 				return;
+			}
 
-			int withdrawQuantity = brewContext.getMissingBrews() - brewRenders;
-			int depositQuantity = brewContext.getSurplusBrews() - brewRenders;
+			if (role == PotionRole.RESTORE && brewContext != null)
+			{
+				if (brewContext.isSkipRoom())
+					return;
 
-			boolean isRendered = renderPotionWarnings(graphics, withdrawQuantity, depositQuantity, itemId, widgetQty, widgetBounds, containerGroupId);
-			if (isRendered)
-				brewRenders++;
+				int withdrawQuantity = brewContext.getMissingRestores() - restoreRenders;
+				int depositQuantity = brewContext.getSurplusRestores() - restoreRenders;
 
-			return;
-		}
+				boolean isRendered = renderPotionWarnings(graphics, withdrawQuantity, depositQuantity, itemId, widgetQty, widgetBounds, containerGroupId);
+				if (isRendered)
+					restoreRenders++;
 
-		if (role == PotionRole.RESTORE && brewContext != null)
-		{
-			if (brewContext.isSkipRoom())
 				return;
-
-			int withdrawQuantity = brewContext.getMissingRestores() - restoreRenders;
-			int depositQuantity = brewContext.getSurplusRestores() - restoreRenders;
-
-			boolean isRendered = renderPotionWarnings(graphics, withdrawQuantity, depositQuantity, itemId, widgetQty, widgetBounds, containerGroupId);
-			if (isRendered)
-				restoreRenders++;
-
-			return;
+			}
 		}
 
 		switch (itemType)
@@ -147,7 +156,13 @@ public class ItemHighlights extends WidgetItemOverlay
 				if (containerGroupId == InterfaceID.RAIDS_STORAGE_PRIVATE)	// Only inventory
 					return;
 
-				if (config.highlightDeposit())
+				boolean shouldRenderDeposit = config.highlightDeposit() == HighlightType.ALWAYS;
+
+                if (config.highlightDeposit() == HighlightType.INTERFACE
+				&& containerGroupId == InterfaceID.RAIDS_STORAGE_SIDE)
+					shouldRenderDeposit = true;
+
+				if (shouldRenderDeposit)
 					renderItemOverlay(graphics, itemId, widgetQty, config.depositColour(), widgetBounds, true);
 				break;
 		}
@@ -200,15 +215,13 @@ public class ItemHighlights extends WidgetItemOverlay
         return ImageUtil.fillImage(itemManager.getImage(itemId, qty, false), fillColor);
 	}
 
-	private List<Integer> itemIndexes = new ArrayList<>();
-	public void updateInventoryItems(List<Integer> itemIndex)
+	public void reset()
 	{
-		itemIndexes = itemIndex;
-	}
-
-	public void updateMismatchedItems(List<Integer> mismatchIndexes)
-	{
-		this.mismatchedItems = mismatchIndexes;
+		mismatchedItems.clear();
+		itemIndexes.clear();
+		brewRenders = 0;
+		restoreRenders = 0;
+		brewContext = null;
 	}
 
 	public void clearIndexes()

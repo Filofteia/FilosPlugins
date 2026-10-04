@@ -55,7 +55,7 @@ public class PresetPanel extends JPanel
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JLabel headerLabel = new JLabel("CM Storage");
+        JLabel headerLabel = new JLabel("CM Storage Presets");
         headerLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JPanel headerPanel = new JPanel(new BorderLayout());

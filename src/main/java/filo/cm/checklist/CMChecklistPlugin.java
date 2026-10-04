@@ -103,10 +103,11 @@ public class CMChecklistPlugin extends Plugin {
 	private StorageZigzag storageZigzag;
 	private final List<Integer> mismatchedItems = new ArrayList<>();
 	@Getter	private BrewContext brewContext = null;
+
+	// UI does not set these
 	@Getter	private RoomSetup activeRoomSetup = null;
 	@Getter	private InstanceTemplate activeTemplate = null;
 
-	//todo: check if this works in small, large, and team relogs (start, end) and if it works across all floors.
 	private boolean pendingRaidCheck = false;
 	private boolean isFullRaid = false;	// CM and Full
 	private boolean inRaid = false;
@@ -136,8 +137,8 @@ public class CMChecklistPlugin extends Plugin {
 			if (client.getGameState() != GameState.LOGGED_IN)
 				return;
 
-			isFullRaid = isAcceptedRaid();
 			inRaid = client.getVarbitValue(VarbitID.RAIDS_CLIENT_INDUNGEON) > 0;
+			isFullRaid = isAcceptedRaid();
 		});
 	}
 
@@ -146,6 +147,7 @@ public class CMChecklistPlugin extends Plugin {
 		toolbar.removeNavigation(panelButton);
 		overlayManager.remove(overlay);
 
+		// might move clean-up to a method soon for logout
 		activeRoomSetup = null;
 		activeTemplate =  null;
 		brewContext = null;
@@ -187,6 +189,7 @@ public class CMChecklistPlugin extends Plugin {
 		}
 
 		if (!inRaid || !isFullRaid) {
+			isFullRaid = false;	// inRaid updates fine
 			activeTemplate = null;
 			activeRoomSetup = null;
 			brewContext = null;
@@ -365,7 +368,7 @@ public class CMChecklistPlugin extends Plugin {
 	{
 		Player localPlayer = client.getLocalPlayer();
 		if (localPlayer == null)
-			return -1;
+			return 0;
 
 		int pPosPlane = pPosOverride >= 0 ? pPosOverride : client.getTopLevelWorldView().getPlane();
 		int pPosX = localPlayer.getLocalLocation().getSceneX();
@@ -373,12 +376,12 @@ public class CMChecklistPlugin extends Plugin {
 
 		WorldView pWorldView = localPlayer.getWorldView();
 		if (pWorldView == null)
-			return -1;
+			return 0;
 
 		return pWorldView.getInstanceTemplateChunks()[pPosPlane][pPosX / 8][pPosY / 8];
 	}
 
-	// kinda hacky but on normal chambers floor 1 isn't real
+	// hacky but works
 	private boolean isAcceptedRaid()
 	{
 		boolean isChallenge = client.getVarbitValue(VarbitID.RAIDS_CHALLENGE_MODE) > 0;
@@ -386,7 +389,7 @@ public class CMChecklistPlugin extends Plugin {
 			return true;
 
 		int templateId = getTemplateId(1);
-		InstanceTemplates template = InstanceTemplates.findMatch(templateId);	// using the real templates because it has all
+		InstanceTemplates template = InstanceTemplates.findMatch(templateId); // official template because it has all rooms
 
 		return template != null;
 	}

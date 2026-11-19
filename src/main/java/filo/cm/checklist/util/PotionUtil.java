@@ -29,4 +29,22 @@ public class PotionUtil {
 
         return potionQuantity;
     }
+
+    public static int getPotionQuantity(int minDose, Item[] items, PotionRole role)
+    {
+        int potionQuantity = 0;
+        for (Item item : items)
+        {
+            int widgetId = item.getId();
+
+            PotionType itemType = PotionType.fromItemId(widgetId);
+            if (itemType != null)
+            {
+                if (itemType.getRole() == role)
+                    potionQuantity++;
+            }
+        }
+
+        return potionQuantity;
+    }
 }

@@ -27,7 +27,7 @@ public class BrewContext {
         this.currentBrews = PotionUtil.getPotionQuantity(1, playerInventory.getItems(), PotionType.SARADOMIN_BREW, PotionType.XERICS_AID_STRONG);
 
         this.requiredRestores = roomSetup.getRestCount();
-        this.currentRestores = PotionUtil.getPotionQuantity(1, playerInventory.getItems(), PotionType.SUPER_RESTORE, PotionType.REVITALISATION_STRONG, PotionType.REVITALISATION, PotionType.REVITALISATION_WEAK);
+        this.currentRestores = PotionUtil.getPotionQuantity(1, playerInventory.getItems(), PotionType.SUPER_RESTORE, PotionType.SANFEW_SERUM, PotionType.REVITALISATION_STRONG, PotionType.REVITALISATION, PotionType.REVITALISATION_WEAK);
 
         this.missingBrews = Math.max(0, requiredBrews - currentBrews);
         this.missingRestores = Math.max(0, requiredRestores - currentRestores);

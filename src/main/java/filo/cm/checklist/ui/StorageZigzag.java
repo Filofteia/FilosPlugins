@@ -145,7 +145,7 @@ public class StorageZigzag {
         widgets.sort(Comparator.comparingInt(Widget::getIndex));
 
         int playerBrews = PotionUtil.getPotionQuantity(1, currentItems, PotionType.SARADOMIN_BREW, PotionType.XERICS_AID_STRONG);
-        int playerRestores = PotionUtil.getPotionQuantity(1, currentItems, PotionType.SUPER_RESTORE, PotionType.REVITALISATION_STRONG);
+        int playerRestores = PotionUtil.getPotionQuantity(1, currentItems, PotionType.SUPER_RESTORE, PotionType.SANFEW_SERUM, PotionType.REVITALISATION_STRONG);
         int brewsToGhost = Math.min(setup.getBrewCount(), playerBrews);
         int restToGhost = Math.min(setup.getRestCount(), playerRestores);
         int brewCounter = 0;

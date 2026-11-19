@@ -138,7 +138,7 @@ public class CMChecklistPlugin extends Plugin {
 				return;
 
 			inRaid = client.getVarbitValue(VarbitID.RAIDS_CLIENT_INDUNGEON) > 0;
-			isFullRaid = isAcceptedRaid();
+			isFullRaid = isAcceptedRaid();	// not in olm room though
 		});
 	}
 
@@ -389,7 +389,7 @@ public class CMChecklistPlugin extends Plugin {
 			return true;
 
 		int templateId = getTemplateId(1);
-		InstanceTemplates template = InstanceTemplates.findMatch(templateId); // official template because it has all rooms
+		InstanceTemplates template = InstanceTemplates.findMatch(templateId); // official template because it has all rooms (lacks a few rooms, should mayybe look into making a custom one)
 
 		return template != null;
 	}
